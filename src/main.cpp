@@ -62,13 +62,41 @@ void pontuacao_load(int pontuacao3, SDL_Rect pontuacao03, SDL_Surface *pontuacao
 }
 
 // funcao que verifica a colisao entre objetos
-int colisao(int ax, int ay, int aw, int ah, int cx, int cy, int cw, int ch) {
+bool checkCollisionBetweenTwoRects(int ax, int ay, int aw, int ah, int cx, int cy, int cw, int ch) {
     int bx, by, dx, dy;
     bx = ax + aw;
     by = ay + ah;
     dx = cx + cw;
     dy = cy + ch;
     return (((ax > dx) || (bx < cx) || (ay > dy) || (by < cy)));
+}
+
+bool checkCollisionPlayer1(SDL_Rect& offset, SDL_Rect& offset2, SDL_Rect& wall, SDL_Rect& menu, SDL_Rect& offset3) {
+    return (
+        checkCollisionBetweenTwoRects(
+            offset.x, offset.y, offset.w, offset.h, wall.x, wall.y, wall.w,
+                                wall.h) &&
+        checkCollisionBetweenTwoRects(offset.x, offset.y, offset.w, offset.h, offset2.x, offset2.y,
+                offset2.w, offset2.h) &&
+        checkCollisionBetweenTwoRects(offset.x, offset.y, offset.w, offset.h, menu.x, menu.y, menu.w,
+                menu.h) &&
+        checkCollisionBetweenTwoRects(offset.x, offset.y, offset.w, offset.h, offset3.x, offset3.y,
+                offset3.w, offset3.h)
+    );
+}
+
+
+bool checkCollisionPlayer2(SDL_Rect& offset, SDL_Rect& offset2, SDL_Rect& wall, SDL_Rect& menu, SDL_Rect& offset3) {
+    return (
+        checkCollisionBetweenTwoRects(offset2.x, offset2.y, offset2.w, offset2.h, wall.x, wall.y, wall.w,
+                    wall.h) &&
+        checkCollisionBetweenTwoRects(offset.x, offset.y, offset.w, offset.h, offset2.x, offset2.y,
+                offset2.w, offset2.h) &&
+        checkCollisionBetweenTwoRects(offset2.x, offset2.y, offset2.w, offset2.h, menu.x, menu.y, menu.w,
+                menu.h) &&
+        checkCollisionBetweenTwoRects(offset2.x, offset2.y, offset2.w, offset2.h, offset3.x, offset3.y,
+                offset3.w, offset3.h)
+    );
 }
 
 // funcao para movimentar os tanques
@@ -83,14 +111,7 @@ void andar(SDL_Event event, SDL_Surface *screen, SDL_Surface *telaprincipal, SDL
         if (event.type == SDL_KEYDOWN) {
             switch (event.key.keysym.sym) {  // comandos para o jogador 1
                 case SDLK_UP:
-                    if (colisao(offset.x, offset.y, offset.w, offset.h, wall.x, wall.y, wall.w,
-                                wall.h) &&
-                        colisao(offset.x, offset.y, offset.w, offset.h, offset2.x, offset2.y,
-                                offset2.w, offset2.h) &&
-                        colisao(offset.x, offset.y, offset.w, offset.h, menu.x, menu.y, menu.w,
-                                menu.h) &&
-                        colisao(offset.x, offset.y, offset.w, offset.h, offset3.x, offset3.y,
-                                offset3.w, offset3.h)) {
+                    if (checkCollisionPlayer1(offset, offset2, wall, menu, offset3)) {
                         offset.y = offset.y - 6;
                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
                         SDL_BlitSurface(jogador1, &jogador1_c[1], screen, &offset);
@@ -110,14 +131,7 @@ void andar(SDL_Event event, SDL_Surface *screen, SDL_Surface *telaprincipal, SDL
                     }
                     break;
                 case SDLK_DOWN:
-                    if (colisao(offset.x, offset.y, offset.w, offset.h, wall.x, wall.y, wall.w,
-                                wall.h) &&
-                        colisao(offset.x, offset.y, offset.w, offset.h, offset2.x, offset2.y,
-                                offset2.w, offset2.h) &&
-                        colisao(offset.x, offset.y, offset.w, offset.h, menu.x, menu.y, menu.w,
-                                menu.h) &&
-                        colisao(offset.x, offset.y, offset.w, offset.h, offset3.x, offset3.y,
-                                offset3.w, offset3.h)) {
+                    if (checkCollisionPlayer1(offset, offset2, wall, menu, offset3)) {
                         offset.y = offset.y + 6;
                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
                         SDL_BlitSurface(jogador1, &jogador1_c[2], screen, &offset);
@@ -137,14 +151,7 @@ void andar(SDL_Event event, SDL_Surface *screen, SDL_Surface *telaprincipal, SDL
                     }
                     break;
                 case SDLK_RIGHT:
-                    if (colisao(offset.x, offset.y, offset.w, offset.h, wall.x, wall.y, wall.w,
-                                wall.h) &&
-                        colisao(offset.x, offset.y, offset.w, offset.h, offset2.x, offset2.y,
-                                offset2.w, offset2.h) &&
-                        colisao(offset.x, offset.y, offset.w, offset.h, menu.x, menu.y, menu.w,
-                                menu.h) &&
-                        colisao(offset.x, offset.y, offset.w, offset.h, offset3.x, offset3.y,
-                                offset3.w, offset3.h)) {
+                    if (checkCollisionPlayer1(offset, offset2, wall, menu, offset3)) {
                         offset.x = offset.x + 6;
                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
                         SDL_BlitSurface(jogador1, &jogador1_c[0], screen, &offset);
@@ -164,14 +171,7 @@ void andar(SDL_Event event, SDL_Surface *screen, SDL_Surface *telaprincipal, SDL
                     }
                     break;
                 case SDLK_LEFT:
-                    if (colisao(offset.x, offset.y, offset.w, offset.h, wall.x, wall.y, wall.w,
-                                wall.h) &&
-                        colisao(offset.x, offset.y, offset.w, offset.h, offset2.x, offset2.y,
-                                offset2.w, offset2.h) &&
-                        colisao(offset.x, offset.y, offset.w, offset.h, menu.x, menu.y, menu.w,
-                                menu.h) &&
-                        colisao(offset.x, offset.y, offset.w, offset.h, offset3.x, offset3.y,
-                                offset3.w, offset3.h)) {
+                    if (checkCollisionPlayer1(offset, offset2, wall, menu, offset3)) {
                         offset.x = offset.x - 6;
                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
                         SDL_BlitSurface(jogador1, &jogador1_c[3], screen, &offset);
@@ -192,14 +192,7 @@ void andar(SDL_Event event, SDL_Surface *screen, SDL_Surface *telaprincipal, SDL
                     break;
                     // comandos para o jogador 2
                 case SDLK_w:
-                    if (colisao(offset2.x, offset2.y, offset2.w, offset2.h, wall.x, wall.y, wall.w,
-                                wall.h) &&
-                        colisao(offset.x, offset.y, offset.w, offset.h, offset2.x, offset2.y,
-                                offset2.w, offset2.h) &&
-                        colisao(offset2.x, offset2.y, offset2.w, offset2.h, menu.x, menu.y, menu.w,
-                                menu.h) &&
-                        colisao(offset2.x, offset2.y, offset2.w, offset2.h, offset3.x, offset3.y,
-                                offset3.w, offset3.h)) {
+                    if (checkCollisionPlayer2(offset, offset2, wall, menu, offset3)) {
                         offset2.y = offset2.y - 6;
                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
                         SDL_BlitSurface(jogador2, &jogador2_c[1], screen, &offset2);
@@ -219,14 +212,7 @@ void andar(SDL_Event event, SDL_Surface *screen, SDL_Surface *telaprincipal, SDL
                     }
                     break;
                 case SDLK_s:
-                    if (colisao(offset2.x, offset2.y, offset2.w, offset2.h, wall.x, wall.y, wall.w,
-                                wall.h) &&
-                        colisao(offset.x, offset.y, offset.w, offset.h, offset2.x, offset2.y,
-                                offset2.w, offset2.h) &&
-                        colisao(offset2.x, offset2.y, offset2.w, offset2.h, menu.x, menu.y, menu.w,
-                                menu.h) &&
-                        colisao(offset2.x, offset2.y, offset2.w, offset2.h, offset3.x, offset3.y,
-                                offset3.w, offset3.h)) {
+                    if (checkCollisionPlayer2(offset, offset2, wall, menu, offset3)) {
                         offset2.y = offset2.y + 6;
                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
                         SDL_BlitSurface(jogador2, &jogador2_c[2], screen, &offset2);
@@ -246,14 +232,7 @@ void andar(SDL_Event event, SDL_Surface *screen, SDL_Surface *telaprincipal, SDL
                     }
                     break;
                 case SDLK_d:
-                    if (colisao(offset2.x, offset2.y, offset2.w, offset2.h, wall.x, wall.y, wall.w,
-                                wall.h) &&
-                        colisao(offset.x, offset.y, offset.w, offset.h, offset2.x, offset2.y,
-                                offset2.w, offset2.h) &&
-                        colisao(offset2.x, offset2.y, offset2.w, offset2.h, menu.x, menu.y, menu.w,
-                                menu.h) &&
-                        colisao(offset2.x, offset2.y, offset2.w, offset2.h, offset3.x, offset3.y,
-                                offset3.w, offset3.h)) {
+                    if (checkCollisionPlayer2(offset, offset2, wall, menu, offset3)) {
                         offset2.x = offset2.x + 6;
                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
                         SDL_BlitSurface(jogador2, &jogador2_c[0], screen, &offset2);
@@ -273,14 +252,7 @@ void andar(SDL_Event event, SDL_Surface *screen, SDL_Surface *telaprincipal, SDL
                     }
                     break;
                 case SDLK_a:
-                    if (colisao(offset2.x, offset2.y, offset2.w, offset2.h, wall.x, wall.y, wall.w,
-                                wall.h) &&
-                        colisao(offset.x, offset.y, offset.w, offset.h, offset2.x, offset2.y,
-                                offset2.w, offset2.h) &&
-                        colisao(offset2.x, offset2.y, offset2.w, offset2.h, menu.x, menu.y, menu.w,
-                                menu.h) &&
-                        colisao(offset2.x, offset2.y, offset2.w, offset2.h, offset3.x, offset3.y,
-                                offset3.w, offset3.h)) {
+                    if (checkCollisionPlayer2(offset, offset2, wall, menu, offset3)) {
                         offset2.x = offset2.x - 6;
                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
                         SDL_BlitSurface(jogador2, &jogador2_c[3], screen, &offset2);
@@ -657,14 +629,7 @@ int main(int argc, char *args[]) {
                         case SDL_KEYDOWN:
                             switch (event.key.keysym.sym) {  // comandos para o jogador 1
                                 case SDLK_UP:                // tecla para cima
-                                    if (colisao(offset.x, offset.y, offset.w, offset.h, wall.x,
-                                                wall.y, wall.w, wall.h) &&
-                                        colisao(offset.x, offset.y, offset.w, offset.h, offset2.x,
-                                                offset2.y, offset2.w, offset2.h) &&
-                                        colisao(offset.x, offset.y, offset.w, offset.h, menu.x,
-                                                menu.y, menu.w, menu.h) &&
-                                        colisao(offset.x, offset.y, offset.w, offset.h, offset3.x,
-                                                offset3.y, offset3.w, offset3.h)) {
+                                    if (checkCollisionPlayer1(offset, offset2, wall, menu, offset3)) {
                                         offset.y = offset.y - 6;
                                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
                                         SDL_BlitSurface(jogador1, &jogador1_c[1], screen, &offset);
@@ -688,14 +653,7 @@ int main(int argc, char *args[]) {
                                     }
                                     break;
                                 case SDLK_DOWN:  // tecla para baixo
-                                    if (colisao(offset.x, offset.y, offset.w, offset.h, wall.x,
-                                                wall.y, wall.w, wall.h) &&
-                                        colisao(offset.x, offset.y, offset.w, offset.h, offset2.x,
-                                                offset2.y, offset2.w, offset2.h) &&
-                                        colisao(offset.x, offset.y, offset.w, offset.h, menu.x,
-                                                menu.y, menu.w, menu.h) &&
-                                        colisao(offset.x, offset.y, offset.w, offset.h, offset3.x,
-                                                offset3.y, offset3.w, offset3.h)) {
+                                    if (checkCollisionPlayer1(offset, offset2, wall, menu, offset3)) {
                                         offset.y = offset.y + 6;
                                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
                                         SDL_BlitSurface(jogador1, &jogador1_c[2], screen, &offset);
@@ -719,14 +677,7 @@ int main(int argc, char *args[]) {
                                     }
                                     break;
                                 case SDLK_RIGHT:  // tecla para a direita
-                                    if (colisao(offset.x, offset.y, offset.w, offset.h, wall.x,
-                                                wall.y, wall.w, wall.h) &&
-                                        colisao(offset.x, offset.y, offset.w, offset.h, offset2.x,
-                                                offset2.y, offset2.w, offset2.h) &&
-                                        colisao(offset.x, offset.y, offset.w, offset.h, menu.x,
-                                                menu.y, menu.w, menu.h) &&
-                                        colisao(offset.x, offset.y, offset.w, offset.h, offset3.x,
-                                                offset3.y, offset3.w, offset3.h)) {
+                                    if (checkCollisionPlayer1(offset, offset2, wall, menu, offset3)) {
                                         offset.x = offset.x + 6;
                                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
                                         SDL_BlitSurface(jogador1, &jogador1_c[0], screen, &offset);
@@ -750,14 +701,7 @@ int main(int argc, char *args[]) {
                                     }
                                     break;
                                 case SDLK_LEFT:  // tecla para esquerda
-                                    if (colisao(offset.x, offset.y, offset.w, offset.h, wall.x,
-                                                wall.y, wall.w, wall.h) &&
-                                        colisao(offset.x, offset.y, offset.w, offset.h, offset2.x,
-                                                offset2.y, offset2.w, offset2.h) &&
-                                        colisao(offset.x, offset.y, offset.w, offset.h, menu.x,
-                                                menu.y, menu.w, menu.h) &&
-                                        colisao(offset.x, offset.y, offset.w, offset.h, offset3.x,
-                                                offset3.y, offset3.w, offset3.h)) {
+                                    if (checkCollisionPlayer1(offset, offset2, wall, menu, offset3)) {
                                         offset.x = offset.x - 6;
                                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
                                         SDL_BlitSurface(jogador1, &jogador1_c[3], screen, &offset);
@@ -782,14 +726,7 @@ int main(int argc, char *args[]) {
                                     break;
                                 // comandos para o jogador 2
                                 case SDLK_w:  // tecla w ( para cima )
-                                    if (colisao(offset2.x, offset2.y, offset2.w, offset2.h, wall.x,
-                                                wall.y, wall.w, wall.h) &&
-                                        colisao(offset.x, offset.y, offset.w, offset.h, offset2.x,
-                                                offset2.y, offset2.w, offset2.h) &&
-                                        colisao(offset2.x, offset2.y, offset2.w, offset2.h, menu.x,
-                                                menu.y, menu.w, menu.h) &&
-                                        colisao(offset2.x, offset2.y, offset2.w, offset2.h,
-                                                offset3.x, offset3.y, offset3.w, offset3.h)) {
+                                    if (checkCollisionPlayer2(offset, offset2, wall, menu, offset3)) {
                                         offset2.y = offset2.y - 6;
                                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
                                         SDL_BlitSurface(jogador2, &jogador2_c[1], screen, &offset2);
@@ -813,14 +750,7 @@ int main(int argc, char *args[]) {
                                     }
                                     break;
                                 case SDLK_s:  // tecla s ( para baixo )
-                                    if (colisao(offset2.x, offset2.y, offset2.w, offset2.h, wall.x,
-                                                wall.y, wall.w, wall.h) &&
-                                        colisao(offset.x, offset.y, offset.w, offset.h, offset2.x,
-                                                offset2.y, offset2.w, offset2.h) &&
-                                        colisao(offset2.x, offset2.y, offset2.w, offset2.h, menu.x,
-                                                menu.y, menu.w, menu.h) &&
-                                        colisao(offset2.x, offset2.y, offset2.w, offset2.h,
-                                                offset3.x, offset3.y, offset3.w, offset3.h)) {
+                                    if (checkCollisionPlayer2(offset, offset2, wall, menu, offset3)) {
                                         offset2.y = offset2.y + 6;
                                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
                                         SDL_BlitSurface(jogador2, &jogador2_c[2], screen, &offset2);
@@ -844,14 +774,7 @@ int main(int argc, char *args[]) {
                                     }
                                     break;
                                 case SDLK_d:  // tecla d ( para direita )
-                                    if (colisao(offset2.x, offset2.y, offset2.w, offset2.h, wall.x,
-                                                wall.y, wall.w, wall.h) &&
-                                        colisao(offset.x, offset.y, offset.w, offset.h, offset2.x,
-                                                offset2.y, offset2.w, offset2.h) &&
-                                        colisao(offset2.x, offset2.y, offset2.w, offset2.h, menu.x,
-                                                menu.y, menu.w, menu.h) &&
-                                        colisao(offset2.x, offset2.y, offset2.w, offset2.h,
-                                                offset3.x, offset3.y, offset3.w, offset3.h)) {
+                                    if (checkCollisionPlayer2(offset, offset2, wall, menu, offset3)) {
                                         offset2.x = offset2.x + 6;
                                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
                                         SDL_BlitSurface(jogador2, &jogador2_c[0], screen, &offset2);
@@ -875,14 +798,7 @@ int main(int argc, char *args[]) {
                                     }
                                     break;
                                 case SDLK_a:  // tecla a ( para esquerda )
-                                    if (colisao(offset2.x, offset2.y, offset2.w, offset2.h, wall.x,
-                                                wall.y, wall.w, wall.h) &&
-                                        colisao(offset.x, offset.y, offset.w, offset.h, offset2.x,
-                                                offset2.y, offset2.w, offset2.h) &&
-                                        colisao(offset2.x, offset2.y, offset2.w, offset2.h, menu.x,
-                                                menu.y, menu.w, menu.h) &&
-                                        colisao(offset2.x, offset2.y, offset2.w, offset2.h,
-                                                offset3.x, offset3.y, offset3.w, offset3.h)) {
+                                    if (checkCollisionPlayer2(offset, offset2, wall, menu, offset3)) {
                                         offset2.x = offset2.x - 6;
                                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
                                         SDL_BlitSurface(jogador2, &jogador2_c[3], screen, &offset2);
@@ -935,7 +851,7 @@ int main(int argc, char *args[]) {
                                                       bala01, vencedor, quit1, quit2, x, entrar,
                                                       bala1, bala2, pontuacao1, pontuacao2,
                                                       vencedor0);
-                                                if (!colisao(offset2.x, offset2.y, offset2.w,
+                                                if (!checkCollisionBetweenTwoRects(offset2.x, offset2.y, offset2.w,
                                                              offset2.h, offset3.x, offset3.y,
                                                              offset3.w, offset3.h)) {
                                                     pontuacao1 = pontuacao1 + 1;
@@ -986,7 +902,7 @@ int main(int argc, char *args[]) {
                                                       bala01, vencedor, quit1, quit2, x, entrar,
                                                       bala1, bala2, pontuacao1, pontuacao2,
                                                       vencedor0);
-                                                if (!colisao(offset2.x, offset2.y, offset2.w,
+                                                if (!checkCollisionBetweenTwoRects(offset2.x, offset2.y, offset2.w,
                                                              offset2.h, offset3.x, offset3.y,
                                                              offset3.w, offset3.h)) {
                                                     pontuacao1 = pontuacao1 + 1;
@@ -1037,7 +953,7 @@ int main(int argc, char *args[]) {
                                                       bala01, vencedor, quit1, quit2, x, entrar,
                                                       bala1, bala2, pontuacao1, pontuacao2,
                                                       vencedor0);
-                                                if (!colisao(offset2.x, offset2.y, offset2.w,
+                                                if (!checkCollisionBetweenTwoRects(offset2.x, offset2.y, offset2.w,
                                                              offset2.h, offset3.x, offset3.y,
                                                              offset3.w, offset3.h)) {
                                                     pontuacao1 = pontuacao1 + 1;
@@ -1088,7 +1004,7 @@ int main(int argc, char *args[]) {
                                                       bala01, vencedor, quit1, quit2, x, entrar,
                                                       bala1, bala2, pontuacao1, pontuacao2,
                                                       vencedor0);
-                                                if (!colisao(offset2.x, offset2.y, offset2.w,
+                                                if (!checkCollisionBetweenTwoRects(offset2.x, offset2.y, offset2.w,
                                                              offset2.h, offset3.x, offset3.y,
                                                              offset3.w, offset3.h)) {
                                                     pontuacao1 = pontuacao1 + 1;
@@ -1143,7 +1059,7 @@ int main(int argc, char *args[]) {
                                                       bala01, vencedor, quit1, quit2, x, entrar,
                                                       bala1, bala2, pontuacao1, pontuacao2,
                                                       vencedor0);
-                                                if (!colisao(offset.x, offset.y, offset.w, offset.h,
+                                                if (!checkCollisionBetweenTwoRects(offset.x, offset.y, offset.w, offset.h,
                                                              offset3.x, offset3.y, offset3.w,
                                                              offset3.h)) {
                                                     pontuacao2 = pontuacao2 + 1;
@@ -1194,7 +1110,7 @@ int main(int argc, char *args[]) {
                                                       bala01, vencedor, quit1, quit2, x, entrar,
                                                       bala1, bala2, pontuacao1, pontuacao2,
                                                       vencedor0);
-                                                if (!colisao(offset.x, offset.y, offset.w, offset.h,
+                                                if (!checkCollisionBetweenTwoRects(offset.x, offset.y, offset.w, offset.h,
                                                              offset3.x, offset3.y, offset3.w,
                                                              offset3.h)) {
                                                     pontuacao2 = pontuacao2 + 1;
@@ -1245,7 +1161,7 @@ int main(int argc, char *args[]) {
                                                       bala01, vencedor, quit1, quit2, x, entrar,
                                                       bala1, bala2, pontuacao1, pontuacao2,
                                                       vencedor0);
-                                                if (!colisao(offset.x, offset.y, offset.w, offset.h,
+                                                if (!checkCollisionBetweenTwoRects(offset.x, offset.y, offset.w, offset.h,
                                                              offset3.x, offset3.y, offset3.w,
                                                              offset3.h)) {
                                                     pontuacao2 = pontuacao2 + 1;
@@ -1296,7 +1212,7 @@ int main(int argc, char *args[]) {
                                                       bala01, vencedor, quit1, quit2, x, entrar,
                                                       bala1, bala2, pontuacao1, pontuacao2,
                                                       vencedor0);
-                                                if (!colisao(offset.x, offset.y, offset.w, offset.h,
+                                                if (!checkCollisionBetweenTwoRects(offset.x, offset.y, offset.w, offset.h,
                                                              offset3.x, offset3.y, offset3.w,
                                                              offset3.h)) {
                                                     pontuacao2 = pontuacao2 + 1;
