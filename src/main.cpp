@@ -10,26 +10,31 @@
 #include <SDL.h>
 #endif
 
-enum struct DirectionEnum { UP = 0, DOWN = 1, RIGHT = 2, LEFT = 3};
+#include "Constants.hpp"
+#include "SpriteSet.hpp"
+#include "Player.hpp"
 
-SDL_Rect offset;         // coordenada do jogador 1
+// enum struct DirectionEnum { UP = 0, DOWN = 1, RIGHT = 2, LEFT = 3};
+
+// SDL_Rect offset;         // coordenada do jogador 1
 SDL_Rect offset2;        // coordenada do jogador 2
-int posicao1, posicao2;  // variavel para determinacaoo das posicoes dos jogadores
+// int posicao1;
+int posicao2;  // variavel para determinacaoo das posicoes dos jogadores
 
 // funcao para carregar os tanques na tela
 void jogador_load(int posicao2, SDL_Rect offset2, SDL_Surface *jogador2, SDL_Rect jogador2_c[],
                   SDL_Surface *screen) {
     switch (posicao2) {
-        case 0:
+        case static_cast<int>(DirectionEnum::UP):
             SDL_BlitSurface(jogador2, &jogador2_c[1], screen, &offset2);
             break;
-        case 1:
+        case static_cast<int>(DirectionEnum::DOWN):
             SDL_BlitSurface(jogador2, &jogador2_c[2], screen, &offset2);
             break;
-        case 2:
+        case static_cast<int>(DirectionEnum::RIGHT):
             SDL_BlitSurface(jogador2, &jogador2_c[0], screen, &offset2);
             break;
-        case 3:
+        case static_cast<int>(DirectionEnum::LEFT):
             SDL_BlitSurface(jogador2, &jogador2_c[3], screen, &offset2);
             break;
     }
@@ -37,28 +42,36 @@ void jogador_load(int posicao2, SDL_Rect offset2, SDL_Surface *jogador2, SDL_Rec
 
 // funcao para carregar as pontuacoes dos jogadores na tela
 void pontuacao_load(int pontuacao3, SDL_Rect pontuacao03, SDL_Surface *pontuacao,
-                    SDL_Rect pontuacao01[], SDL_Surface *screen) {
+                    SpriteSet& pontuacao01, SDL_Surface *screen) {
+    SDL_Rect pontuacaoSpriteRect;
     switch (pontuacao3) {
         case 0:
-            SDL_BlitSurface(pontuacao, &pontuacao01[0], screen, &pontuacao03);
+            pontuacaoSpriteRect = pontuacao01.getRect("ZERO");
+            SDL_BlitSurface(pontuacao, &pontuacaoSpriteRect, screen, &pontuacao03);
             break;
         case 1:
-            SDL_BlitSurface(pontuacao, &pontuacao01[1], screen, &pontuacao03);
+            pontuacaoSpriteRect = pontuacao01.getRect("ONE");
+            SDL_BlitSurface(pontuacao, &pontuacaoSpriteRect, screen, &pontuacao03);
             break;
         case 2:
-            SDL_BlitSurface(pontuacao, &pontuacao01[2], screen, &pontuacao03);
+            pontuacaoSpriteRect = pontuacao01.getRect("TWO");
+            SDL_BlitSurface(pontuacao, &pontuacaoSpriteRect, screen, &pontuacao03);
             break;
         case 3:
-            SDL_BlitSurface(pontuacao, &pontuacao01[3], screen, &pontuacao03);
+            pontuacaoSpriteRect = pontuacao01.getRect("THREE");
+            SDL_BlitSurface(pontuacao, &pontuacaoSpriteRect, screen, &pontuacao03);
             break;
         case 4:
-            SDL_BlitSurface(pontuacao, &pontuacao01[4], screen, &pontuacao03);
+            pontuacaoSpriteRect = pontuacao01.getRect("FOUR");
+            SDL_BlitSurface(pontuacao, &pontuacaoSpriteRect, screen, &pontuacao03);
             break;
         case 5:
-            SDL_BlitSurface(pontuacao, &pontuacao01[5], screen, &pontuacao03);
+            pontuacaoSpriteRect = pontuacao01.getRect("FIVE");
+            SDL_BlitSurface(pontuacao, &pontuacaoSpriteRect, screen, &pontuacao03);
             break;
         case 6:
-            SDL_BlitSurface(pontuacao, &pontuacao01[6], screen, &pontuacao03);
+            pontuacaoSpriteRect = pontuacao01.getRect("SIX");
+            SDL_BlitSurface(pontuacao, &pontuacaoSpriteRect, screen, &pontuacao03);
             break;
     }
 }
@@ -104,10 +117,10 @@ bool checkCollisionPlayer2(SDL_Rect& offset, SDL_Rect& offset2, SDL_Rect& wall, 
 // funcao para movimentar os tanques
 void andar(SDL_Event event, SDL_Surface *screen, SDL_Surface *telaprincipal, SDL_Surface *jogador1,
            SDL_Surface *jogador2, SDL_Surface *bala, SDL_Surface *explosao, SDL_Surface *pontuacao,
-           SDL_Rect pontuacao01[], SDL_Rect jogador1_c[], SDL_Rect jogador2_c[], SDL_Rect wall,
+           SpriteSet& pontuacao01, SDL_Rect jogador1_c[], SDL_Rect jogador2_c[], SDL_Rect wall,
            SDL_Rect menu, SDL_Rect offset3, SDL_Rect pontuacao02, SDL_Rect pontuacao03,
            SDL_Rect bala01, SDL_Rect vencedor, int quit1, int quit2, int x, int entrar, int bala1,
-           int bala2, int pontuacao1, int pontuacao2, int vencedor0) {
+           int bala2, int pontuacao1, int pontuacao2, int vencedor0, int& posicao1, SDL_Rect& offset) {
     if (SDL_PollEvent(&event))  // condi��o de entrada (enter)
     {
         if (event.type == SDL_KEYDOWN) {
@@ -286,12 +299,16 @@ int main(int argc, char *args[]) {
     SDL_Init(SDL_INIT_TIMER);    // inicializa��o das fun��es de tempo
     SDL_Surface *screen;         // superficie de video
     SDL_Surface *telaprincipal;  // supercie de fundo
-    SDL_Surface *jogador1;       // superficie do jogador 1
+    // SDL_Surface *jogador1;       // superficie do jogador 1
     SDL_Surface *jogador2;       // superficie do jogador 2
     SDL_Surface *bala;           // superficie da bala
     SDL_Surface *explosao;       // superficie da explos�o
     SDL_Surface *pontuacao;      // superficie dos numeros para pontua��o
-    SDL_Rect pontuacao01[7];     //     retangulos    para recorte de imagens dos numeros
+
+    SpriteSet pontuacao01{"Pontuacao01"};
+    Player player1{"Player1"};
+
+    // SDL_Rect pontuacao01[7];     //     retangulos    para recorte de imagens dos numeros
     SDL_Rect jogador1_c[4];  //       "               "               "    das posi��es do jogador 1
     SDL_Rect jogador2_c[4];  //       "               "               "    das posi��es do jogador 2
     SDL_Rect wall;           // retangulo para determinar a colis�o com a parede central
@@ -321,10 +338,11 @@ int main(int argc, char *args[]) {
         {
             // atribui��o de imagens bmp para as superficies do jogo
             telaprincipal = SDL_LoadBMP("resources/telainicial.bmp");
-            jogador1 = SDL_LoadBMP("resources/jogador1.bmp");
-            SDL_SetColorKey(jogador1, SDL_SRCCOLORKEY | SDL_RLEACCEL,
-                            (Uint16)SDL_MapRGB(jogador1->format, 0, 255,
-                                               0));  // para por transparencia no verde.
+            // jogador1 = SDL_LoadBMP("resources/jogador1.bmp");
+            player1.loadSprite("resources/jogador1.bmp");
+            // SDL_SetColorKey(player1.spriteSurface, SDL_SRCCOLORKEY | SDL_RLEACCEL,
+            //                 (Uint16)SDL_MapRGB(jogador1->format, 0, 255,
+            //                                    0));  // para por transparencia no verde.
             jogador2 = SDL_LoadBMP("resources/jogador2.bmp");
             SDL_SetColorKey(jogador2, SDL_SRCCOLORKEY | SDL_RLEACCEL,
                             (Uint16)SDL_MapRGB(jogador2->format, 0, 255,
@@ -573,7 +591,7 @@ int main(int argc, char *args[]) {
             pontuacao02.x = 212, pontuacao02.y = 435;
             pontuacao03.x = 550, pontuacao03.y = 435;
 
-            offset.x = 15, offset.y = 170, offset.w = 32, offset.h = 32;
+            player1.position.x = 15, player1.position.y = 170, player1.position.w = 32, player1.position.h = 32;
             offset2.x = 560, offset2.y = 260, offset2.w = 32, offset2.h = 32;
 
             wall.x = 287, wall.y = 102, wall.w = 53, wall.h = 240;
@@ -581,20 +599,29 @@ int main(int argc, char *args[]) {
 
             bala01.x = 0, bala01.y = 0, bala01.w = 10, bala01.h = 10;
 
-            pontuacao01[0].x = 0, pontuacao01[0].y = 3, pontuacao01[0].w = 25,
-            pontuacao01[0].h = 35;
-            pontuacao01[1].x = 50, pontuacao01[1].y = 3, pontuacao01[1].w = 25,
-            pontuacao01[1].h = 35;
-            pontuacao01[2].x = 98, pontuacao01[2].y = 3, pontuacao01[2].w = 25,
-            pontuacao01[2].h = 35;
-            pontuacao01[3].x = 147, pontuacao01[3].y = 3, pontuacao01[3].w = 25,
-            pontuacao01[3].h = 35;
-            pontuacao01[4].x = 195, pontuacao01[4].y = 3, pontuacao01[4].w = 25,
-            pontuacao01[4].h = 35;
-            pontuacao01[5].x = 245, pontuacao01[5].y = 3, pontuacao01[5].w = 25,
-            pontuacao01[5].h = 35;
-            pontuacao01[6].x = 294, pontuacao01[6].y = 3, pontuacao01[6].w = 25,
-            pontuacao01[6].h = 35;
+            // Adding rects with names
+            pontuacao01.addRect("ZERO", 0, 3, 25, 35);
+            pontuacao01.addRect("ONE", 50, 3, 25, 35);
+            pontuacao01.addRect("TWO", 98, 3, 25, 35);
+            pontuacao01.addRect("THREE", 147, 3, 25, 35);
+            pontuacao01.addRect("FOUR", 195, 3, 25, 35);
+            pontuacao01.addRect("FIVE", 245, 3, 25, 35);
+            pontuacao01.addRect("SIX", 294, 3, 25, 35);
+
+            // pontuacao01[0].x = 0, pontuacao01[0].y = 3, pontuacao01[0].w = 25,
+            // pontuacao01[0].h = 35;
+            // pontuacao01[1].x = 50, pontuacao01[1].y = 3, pontuacao01[1].w = 25,
+            // pontuacao01[1].h = 35;
+            // pontuacao01[2].x = 98, pontuacao01[2].y = 3, pontuacao01[2].w = 25,
+            // pontuacao01[2].h = 35;
+            // pontuacao01[3].x = 147, pontuacao01[3].y = 3, pontuacao01[3].w = 25,
+            // pontuacao01[3].h = 35;
+            // pontuacao01[4].x = 195, pontuacao01[4].y = 3, pontuacao01[4].w = 25,
+            // pontuacao01[4].h = 35;
+            // pontuacao01[5].x = 245, pontuacao01[5].y = 3, pontuacao01[5].w = 25,
+            // pontuacao01[5].h = 35;
+            // pontuacao01[6].x = 294, pontuacao01[6].y = 3, pontuacao01[6].w = 25,
+            // pontuacao01[6].h = 35;
 
             jogador1_c[0].x = 0, jogador1_c[0].y = 0, jogador1_c[0].w = 32,
             jogador1_c[0].h = 32;  // jogador1 virado para direita
@@ -614,12 +641,14 @@ int main(int argc, char *args[]) {
             jogador2_c[3].x = 0, jogador2_c[3].y = 34, jogador2_c[3].w = 32,
             jogador2_c[3].h = 32;  // jogador2 virado para esquerda
 
-            SDL_BlitSurface(pontuacao, &pontuacao01[0], screen, &pontuacao02);
-            SDL_BlitSurface(pontuacao, &pontuacao01[0], screen, &pontuacao03);
-            SDL_BlitSurface(jogador1, &jogador1_c[0], screen, &offset);
+            SDL_Rect pontuacaoZeroRect = pontuacao01.getRect("ZERO");
+            SDL_BlitSurface(pontuacao, &pontuacaoZeroRect, screen, &pontuacao02);
+            SDL_BlitSurface(pontuacao, &pontuacaoZeroRect, screen, &pontuacao03);
+            SDL_BlitSurface(player1.spriteSurface, &jogador1_c[0], screen, &player1.position);
             SDL_BlitSurface(jogador2, &jogador2_c[3], screen, &offset2);
             SDL_Flip(screen);
-            posicao1 = 2;
+            player1.setDirection(DirectionEnum::RIGHT);
+            // posicao1 = 2;
             posicao2 = 3;
             // fim da atribui��o de variaveis
 
@@ -631,10 +660,15 @@ int main(int argc, char *args[]) {
                         case SDL_KEYDOWN:
                             switch (event.key.keysym.sym) {  // comandos para o jogador 1
                                 case SDLK_UP:                // tecla para cima
-                                    if (checkCollisionPlayer1(offset, offset2, wall, menu, offset3)) {
-                                        offset.y = offset.y - 6;
+                                    if (checkCollisionPlayer1(player1.position, offset2, wall, menu, offset3)) {
+
+                                        // Update position and direction of player1
+                                        player1.position.y = player1.position.y - 6;
+                                        player1.setDirection(DirectionEnum::UP);
+
+                                        // Drawing things - NEED to be removed
                                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
-                                        SDL_BlitSurface(jogador1, &jogador1_c[1], screen, &offset);
+                                        SDL_BlitSurface(player1.spriteSurface, &jogador1_c[1], screen, &player1.position);
                                         jogador_load(posicao2, offset2, jogador2, jogador2_c,
                                                      screen);
                                         pontuacao_load(pontuacao2, pontuacao03, pontuacao,
@@ -642,23 +676,28 @@ int main(int argc, char *args[]) {
                                         pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                        pontuacao01, screen);
                                         SDL_Flip(screen);
-                                        posicao1 = static_cast<int>(DirectionEnum::UP);
+                                        // posicao1 = static_cast<int>(DirectionEnum::UP);
                                         break;
                                     } else {
                                         pontuacao2 = pontuacao2 + 1;
                                         pontuacao_load(pontuacao2, pontuacao03, pontuacao,
                                                        pontuacao01, screen);
-                                        SDL_BlitSurface(explosao, NULL, screen, &offset);
+                                        SDL_BlitSurface(explosao, NULL, screen, &player1.position);
                                         SDL_Flip(screen);
                                         SDL_Delay(500);
-                                        offset.x = 15, offset.y = 170;
+                                        player1.position.x = 15, player1.position.y = 170;
                                     }
                                     break;
                                 case SDLK_DOWN:  // tecla para baixo
-                                    if (checkCollisionPlayer1(offset, offset2, wall, menu, offset3)) {
-                                        offset.y = offset.y + 6;
+                                    if (checkCollisionPlayer1(player1.position, offset2, wall, menu, offset3)) {
+                                        
+                                        // Update position and direction of player1
+                                        player1.position.y = player1.position.y + 6;
+                                        player1.setDirection(DirectionEnum::DOWN);
+
+                                        // Drawing things - NEED to be removed
                                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
-                                        SDL_BlitSurface(jogador1, &jogador1_c[2], screen, &offset);
+                                        SDL_BlitSurface(player1.spriteSurface, &jogador1_c[2], screen, &player1.position);
                                         jogador_load(posicao2, offset2, jogador2, jogador2_c,
                                                      screen);
                                         pontuacao_load(pontuacao2, pontuacao03, pontuacao,
@@ -666,23 +705,28 @@ int main(int argc, char *args[]) {
                                         pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                        pontuacao01, screen);
                                         SDL_Flip(screen);
-                                        posicao1 = static_cast<int>(DirectionEnum::DOWN);
+                                        // posicao1 = static_cast<int>(DirectionEnum::DOWN);
                                         break;
                                     } else {
                                         pontuacao2 = pontuacao2 + 1;
                                         pontuacao_load(pontuacao2, pontuacao03, pontuacao,
                                                        pontuacao01, screen);
-                                        SDL_BlitSurface(explosao, NULL, screen, &offset);
+                                        SDL_BlitSurface(explosao, NULL, screen, &player1.position);
                                         SDL_Flip(screen);
                                         SDL_Delay(500);
-                                        offset.x = 15, offset.y = 170;
+                                        player1.position.x = 15, player1.position.y = 170;
                                     }
                                     break;
                                 case SDLK_RIGHT:  // tecla para a direita
-                                    if (checkCollisionPlayer1(offset, offset2, wall, menu, offset3)) {
-                                        offset.x = offset.x + 6;
+                                    if (checkCollisionPlayer1(player1.position, offset2, wall, menu, offset3)) {
+
+                                        // Update position and direction of player1
+                                        player1.position.x = player1.position.x + 6;
+                                        player1.setDirection(DirectionEnum::RIGHT);
+
+                                        // Drawing things - NEED to be removed
                                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
-                                        SDL_BlitSurface(jogador1, &jogador1_c[0], screen, &offset);
+                                        SDL_BlitSurface(player1.spriteSurface, &jogador1_c[0], screen, &player1.position);
                                         jogador_load(posicao2, offset2, jogador2, jogador2_c,
                                                      screen);
                                         pontuacao_load(pontuacao2, pontuacao03, pontuacao,
@@ -690,23 +734,28 @@ int main(int argc, char *args[]) {
                                         pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                        pontuacao01, screen);
                                         SDL_Flip(screen);
-                                        posicao1 = static_cast<int>(DirectionEnum::RIGHT);
+                                        // posicao1 = static_cast<int>(DirectionEnum::RIGHT);
                                         break;
                                     } else {
                                         pontuacao2 = pontuacao2 + 1;
                                         pontuacao_load(pontuacao2, pontuacao03, pontuacao,
                                                        pontuacao01, screen);
-                                        SDL_BlitSurface(explosao, NULL, screen, &offset);
+                                        SDL_BlitSurface(explosao, NULL, screen, &player1.position);
                                         SDL_Flip(screen);
                                         SDL_Delay(500);
-                                        offset.x = 15, offset.y = 170;
+                                        player1.position.x = 15, player1.position.y = 170;
                                     }
                                     break;
                                 case SDLK_LEFT:  // tecla para esquerda
-                                    if (checkCollisionPlayer1(offset, offset2, wall, menu, offset3)) {
-                                        offset.x = offset.x - 6;
+                                    if (checkCollisionPlayer1(player1.position, offset2, wall, menu, offset3)) {
+                                        
+                                        // Update position and direction of player1
+                                        player1.position.x = player1.position.x - 6;
+                                        player1.setDirection(DirectionEnum::LEFT);
+                                        
+                                        // Drawing things - NEED to be removed
                                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
-                                        SDL_BlitSurface(jogador1, &jogador1_c[3], screen, &offset);
+                                        SDL_BlitSurface(player1.spriteSurface, &jogador1_c[3], screen, &player1.position);
                                         jogador_load(posicao2, offset2, jogador2, jogador2_c,
                                                      screen);
                                         pontuacao_load(pontuacao2, pontuacao03, pontuacao,
@@ -714,32 +763,36 @@ int main(int argc, char *args[]) {
                                         pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                        pontuacao01, screen);
                                         SDL_Flip(screen);
-                                        posicao1 = static_cast<int>(DirectionEnum::LEFT);
+                                        // posicao1 = static_cast<int>(DirectionEnum::LEFT);
                                         break;
                                     } else {
                                         pontuacao2 = pontuacao2 + 1;
                                         pontuacao_load(pontuacao2, pontuacao03, pontuacao,
                                                        pontuacao01, screen);
-                                        SDL_BlitSurface(explosao, NULL, screen, &offset);
+                                        SDL_BlitSurface(explosao, NULL, screen, &player1.position);
                                         SDL_Flip(screen);
                                         SDL_Delay(500);
-                                        offset.x = 15, offset.y = 170;
+                                        player1.position.x = 15, player1.position.y = 170;
                                     }
                                     break;
                                 // comandos para o jogador 2
                                 case SDLK_w:  // tecla w ( para cima )
-                                    if (checkCollisionPlayer2(offset, offset2, wall, menu, offset3)) {
+                                    if (checkCollisionPlayer2(player1.position, offset2, wall, menu, offset3)) {
+
+                                        // Update position and direction of player2
                                         offset2.y = offset2.y - 6;
+                                        posicao2 = static_cast<int>(DirectionEnum::UP);
+
+                                        // Drawing things - NEED to be removed
                                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
                                         SDL_BlitSurface(jogador2, &jogador2_c[1], screen, &offset2);
-                                        jogador_load(posicao1, offset, jogador1, jogador1_c,
+                                        jogador_load(player1.direction, player1.position, player1.spriteSurface, jogador1_c,
                                                      screen);
                                         pontuacao_load(pontuacao2, pontuacao03, pontuacao,
                                                        pontuacao01, screen);
                                         pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                        pontuacao01, screen);
                                         SDL_Flip(screen);
-                                        posicao2 = static_cast<int>(DirectionEnum::UP);
                                         break;
                                     } else {
                                         pontuacao1 = pontuacao1 + 1;
@@ -752,18 +805,22 @@ int main(int argc, char *args[]) {
                                     }
                                     break;
                                 case SDLK_s:  // tecla s ( para baixo )
-                                    if (checkCollisionPlayer2(offset, offset2, wall, menu, offset3)) {
+                                    if (checkCollisionPlayer2(player1.position, offset2, wall, menu, offset3)) {
+                                        
+                                        // Update position and direction of player2
                                         offset2.y = offset2.y + 6;
+                                        posicao2 = static_cast<int>(DirectionEnum::DOWN);
+                                        
+                                        // Drawing things - NEED to be removed
                                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
                                         SDL_BlitSurface(jogador2, &jogador2_c[2], screen, &offset2);
-                                        jogador_load(posicao1, offset, jogador1, jogador1_c,
+                                        jogador_load(player1.direction, player1.position, player1.spriteSurface, jogador1_c,
                                                      screen);
                                         pontuacao_load(pontuacao2, pontuacao03, pontuacao,
                                                        pontuacao01, screen);
                                         pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                        pontuacao01, screen);
                                         SDL_Flip(screen);
-                                        posicao2 = static_cast<int>(DirectionEnum::DOWN);
                                         break;
                                     } else {
                                         pontuacao1 = pontuacao1 + 1;
@@ -776,18 +833,21 @@ int main(int argc, char *args[]) {
                                     }
                                     break;
                                 case SDLK_d:  // tecla d ( para direita )
-                                    if (checkCollisionPlayer2(offset, offset2, wall, menu, offset3)) {
+                                    if (checkCollisionPlayer2(player1.position, offset2, wall, menu, offset3)) {
+                                        // Update position and direction of player2
                                         offset2.x = offset2.x + 6;
+                                        posicao2 = static_cast<int>(DirectionEnum::RIGHT);
+
+                                        // Drawing things - NEED to be removed
                                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
                                         SDL_BlitSurface(jogador2, &jogador2_c[0], screen, &offset2);
-                                        jogador_load(posicao1, offset, jogador1, jogador1_c,
+                                        jogador_load(player1.direction, player1.position, player1.spriteSurface, jogador1_c,
                                                      screen);
                                         pontuacao_load(pontuacao2, pontuacao03, pontuacao,
                                                        pontuacao01, screen);
                                         pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                        pontuacao01, screen);
                                         SDL_Flip(screen);
-                                        posicao2 = static_cast<int>(DirectionEnum::RIGHT);
                                         break;
                                     } else {
                                         pontuacao1 = pontuacao1 + 1;
@@ -800,18 +860,21 @@ int main(int argc, char *args[]) {
                                     }
                                     break;
                                 case SDLK_a:  // tecla a ( para esquerda )
-                                    if (checkCollisionPlayer2(offset, offset2, wall, menu, offset3)) {
+                                    if (checkCollisionPlayer2(player1.position, offset2, wall, menu, offset3)) {
+                                        // Update position and direction of player2
                                         offset2.x = offset2.x - 6;
+                                        posicao2 = static_cast<int>(DirectionEnum::LEFT);
+
+                                        // Drawing things - NEED to be removed
                                         SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
                                         SDL_BlitSurface(jogador2, &jogador2_c[3], screen, &offset2);
-                                        jogador_load(posicao1, offset, jogador1, jogador1_c,
+                                        jogador_load(player1.direction, player1.position, player1.spriteSurface, jogador1_c,
                                                      screen);
                                         pontuacao_load(pontuacao2, pontuacao03, pontuacao,
                                                        pontuacao01, screen);
                                         pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                        pontuacao01, screen);
                                         SDL_Flip(screen);
-                                        posicao2 = static_cast<int>(DirectionEnum::LEFT);
                                         break;
                                     } else {
                                         pontuacao1 = pontuacao1 + 1;
@@ -828,14 +891,14 @@ int main(int argc, char *args[]) {
                                     break;
                                 // comandos para o tiro dos jogadores 1 e 2
                                 case SDLK_m:  // tecla m para o tiro do jogador 1
-                                    switch (posicao1) {
+                                    switch (player1.direction) {
                                         case static_cast<int>(DirectionEnum::UP):
-                                            offset3.x = offset.x + 12;
-                                            offset3.y = offset.y - 12;
+                                            offset3.x = player1.position.x + 12;
+                                            offset3.y = player1.position.y - 12;
                                             for (bala1 = 1; bala1 < 10; bala1 = bala1 + 1) {
                                                 offset3.y = offset3.y - 10;
                                                 SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
-                                                jogador_load(posicao1, offset, jogador1, jogador1_c,
+                                                jogador_load(player1.direction, player1.position, player1.spriteSurface, jogador1_c,
                                                              screen);
                                                 pontuacao_load(pontuacao2, pontuacao03, pontuacao,
                                                                pontuacao01, screen);
@@ -846,13 +909,13 @@ int main(int argc, char *args[]) {
                                                 SDL_BlitSurface(bala, NULL, screen, &offset3);
                                                 SDL_Flip(screen);
                                                 SDL_Delay(50);
-                                                andar(event, screen, telaprincipal, jogador1,
+                                                andar(event, screen, telaprincipal, player1.spriteSurface,
                                                       jogador2, bala, explosao, pontuacao,
                                                       pontuacao01, jogador1_c, jogador2_c, wall,
                                                       menu, offset3, pontuacao02, pontuacao03,
                                                       bala01, vencedor, quit1, quit2, x, entrar,
                                                       bala1, bala2, pontuacao1, pontuacao2,
-                                                      vencedor0);
+                                                      vencedor0, player1.direction, player1.position);
                                                 if (!checkCollisionBetweenTwoRects(offset2.x, offset2.y, offset2.w,
                                                              offset2.h, offset3.x, offset3.y,
                                                              offset3.w, offset3.h)) {
@@ -870,7 +933,7 @@ int main(int argc, char *args[]) {
                                             offset3.x = 650;
                                             offset3.y = 650;
                                             SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
-                                            jogador_load(posicao1, offset, jogador1, jogador1_c,
+                                            jogador_load(player1.direction, player1.position, player1.spriteSurface, jogador1_c,
                                                          screen);
                                             pontuacao_load(pontuacao2, pontuacao03, pontuacao,
                                                            pontuacao01, screen);
@@ -881,12 +944,12 @@ int main(int argc, char *args[]) {
                                             SDL_Flip(screen);
                                             break;
                                         case static_cast<int>(DirectionEnum::DOWN):
-                                            offset3.x = offset.x + 12;
-                                            offset3.y = offset.y + 36;
+                                            offset3.x = player1.position.x + 12;
+                                            offset3.y = player1.position.y + 36;
                                             for (bala1 = 1; bala1 < 10; bala1 = bala1 + 1) {
                                                 offset3.y = offset3.y + 10;
                                                 SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
-                                                jogador_load(posicao1, offset, jogador1, jogador1_c,
+                                                jogador_load(player1.direction, player1.position, player1.spriteSurface, jogador1_c,
                                                              screen);
                                                 pontuacao_load(pontuacao2, pontuacao03, pontuacao,
                                                                pontuacao01, screen);
@@ -897,13 +960,13 @@ int main(int argc, char *args[]) {
                                                 SDL_BlitSurface(bala, NULL, screen, &offset3);
                                                 SDL_Flip(screen);
                                                 SDL_Delay(50);
-                                                andar(event, screen, telaprincipal, jogador1,
+                                                andar(event, screen, telaprincipal, player1.spriteSurface,
                                                       jogador2, bala, explosao, pontuacao,
                                                       pontuacao01, jogador1_c, jogador2_c, wall,
                                                       menu, offset3, pontuacao02, pontuacao03,
                                                       bala01, vencedor, quit1, quit2, x, entrar,
                                                       bala1, bala2, pontuacao1, pontuacao2,
-                                                      vencedor0);
+                                                      vencedor0, player1.direction, player1.position);
                                                 if (!checkCollisionBetweenTwoRects(offset2.x, offset2.y, offset2.w,
                                                              offset2.h, offset3.x, offset3.y,
                                                              offset3.w, offset3.h)) {
@@ -921,7 +984,7 @@ int main(int argc, char *args[]) {
                                             offset3.x = 650;
                                             offset3.y = 650;
                                             SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
-                                            jogador_load(posicao1, offset, jogador1, jogador1_c,
+                                            jogador_load(player1.direction, player1.position, player1.spriteSurface, jogador1_c,
                                                          screen);
                                             pontuacao_load(pontuacao2, pontuacao03, pontuacao,
                                                            pontuacao01, screen);
@@ -932,12 +995,12 @@ int main(int argc, char *args[]) {
                                             SDL_Flip(screen);
                                             break;
                                         case static_cast<int>(DirectionEnum::RIGHT):
-                                            offset3.x = offset.x + 36;
-                                            offset3.y = offset.y + 12;
+                                            offset3.x = player1.position.x + 36;
+                                            offset3.y = player1.position.y + 12;
                                             for (bala1 = 1; bala1 < 10; bala1 = bala1 + 1) {
                                                 offset3.x = offset3.x + 10;
                                                 SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
-                                                jogador_load(posicao1, offset, jogador1, jogador1_c,
+                                                jogador_load(player1.direction, player1.position, player1.spriteSurface, jogador1_c,
                                                              screen);
                                                 pontuacao_load(pontuacao2, pontuacao03, pontuacao,
                                                                pontuacao01, screen);
@@ -948,13 +1011,13 @@ int main(int argc, char *args[]) {
                                                 SDL_BlitSurface(bala, NULL, screen, &offset3);
                                                 SDL_Flip(screen);
                                                 SDL_Delay(50);
-                                                andar(event, screen, telaprincipal, jogador1,
+                                                andar(event, screen, telaprincipal, player1.spriteSurface,
                                                       jogador2, bala, explosao, pontuacao,
                                                       pontuacao01, jogador1_c, jogador2_c, wall,
                                                       menu, offset3, pontuacao02, pontuacao03,
                                                       bala01, vencedor, quit1, quit2, x, entrar,
                                                       bala1, bala2, pontuacao1, pontuacao2,
-                                                      vencedor0);
+                                                      vencedor0, player1.direction, player1.position);
                                                 if (!checkCollisionBetweenTwoRects(offset2.x, offset2.y, offset2.w,
                                                              offset2.h, offset3.x, offset3.y,
                                                              offset3.w, offset3.h)) {
@@ -972,7 +1035,7 @@ int main(int argc, char *args[]) {
                                             offset3.x = 650;
                                             offset3.y = 650;
                                             SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
-                                            jogador_load(posicao1, offset, jogador1, jogador1_c,
+                                            jogador_load(player1.direction, player1.position, player1.spriteSurface, jogador1_c,
                                                          screen);
                                             pontuacao_load(pontuacao2, pontuacao03, pontuacao,
                                                            pontuacao01, screen);
@@ -983,12 +1046,12 @@ int main(int argc, char *args[]) {
                                             SDL_Flip(screen);
                                             break;
                                         case static_cast<int>(DirectionEnum::LEFT):
-                                            offset3.x = offset.x - 12;
-                                            offset3.y = offset.y + 12;
+                                            offset3.x = player1.position.x - 12;
+                                            offset3.y = player1.position.y + 12;
                                             for (bala1 = 1; bala1 < 10; bala1 = bala1 + 1) {
                                                 offset3.x = offset3.x - 10;
                                                 SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
-                                                jogador_load(posicao1, offset, jogador1, jogador1_c,
+                                                jogador_load(player1.direction, player1.position, player1.spriteSurface, jogador1_c,
                                                              screen);
                                                 pontuacao_load(pontuacao2, pontuacao03, pontuacao,
                                                                pontuacao01, screen);
@@ -999,13 +1062,13 @@ int main(int argc, char *args[]) {
                                                 SDL_BlitSurface(bala, NULL, screen, &offset3);
                                                 SDL_Flip(screen);
                                                 SDL_Delay(50);
-                                                andar(event, screen, telaprincipal, jogador1,
+                                                andar(event, screen, telaprincipal, player1.spriteSurface,
                                                       jogador2, bala, explosao, pontuacao,
                                                       pontuacao01, jogador1_c, jogador2_c, wall,
                                                       menu, offset3, pontuacao02, pontuacao03,
                                                       bala01, vencedor, quit1, quit2, x, entrar,
                                                       bala1, bala2, pontuacao1, pontuacao2,
-                                                      vencedor0);
+                                                      vencedor0, player1.direction, player1.position);
                                                 if (!checkCollisionBetweenTwoRects(offset2.x, offset2.y, offset2.w,
                                                              offset2.h, offset3.x, offset3.y,
                                                              offset3.w, offset3.h)) {
@@ -1023,7 +1086,7 @@ int main(int argc, char *args[]) {
                                             offset3.x = 650;
                                             offset3.y = 650;
                                             SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
-                                            jogador_load(posicao1, offset, jogador1, jogador1_c,
+                                            jogador_load(player1.direction, player1.position, player1.spriteSurface, jogador1_c,
                                                          screen);
                                             pontuacao_load(pontuacao2, pontuacao03, pontuacao,
                                                            pontuacao01, screen);
@@ -1049,29 +1112,30 @@ int main(int argc, char *args[]) {
                                                                pontuacao01, screen);
                                                 pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                                pontuacao01, screen);
-                                                jogador_load(posicao1, offset, jogador1, jogador1_c,
+                                                jogador_load(player1.direction, player1.position, player1.spriteSurface, jogador1_c,
                                                              screen);
                                                 SDL_BlitSurface(bala, NULL, screen, &offset3);
                                                 SDL_Flip(screen);
                                                 SDL_Delay(50);
-                                                andar(event, screen, telaprincipal, jogador1,
+                                                andar(event, screen, telaprincipal, player1.spriteSurface,
                                                       jogador2, bala, explosao, pontuacao,
                                                       pontuacao01, jogador1_c, jogador2_c, wall,
                                                       menu, offset3, pontuacao02, pontuacao03,
                                                       bala01, vencedor, quit1, quit2, x, entrar,
                                                       bala1, bala2, pontuacao1, pontuacao2,
-                                                      vencedor0);
-                                                if (!checkCollisionBetweenTwoRects(offset.x, offset.y, offset.w, offset.h,
+                                                      vencedor0, player1.direction, player1.position);
+                                                if (!checkCollisionBetweenTwoRects(
+                                                        player1.position.x, player1.position.y, player1.position.w, player1.position.h,
                                                              offset3.x, offset3.y, offset3.w,
                                                              offset3.h)) {
                                                     pontuacao2 = pontuacao2 + 1;
                                                     pontuacao_load(pontuacao2, pontuacao03,
                                                                    pontuacao, pontuacao01, screen);
                                                     SDL_BlitSurface(explosao, NULL, screen,
-                                                                    &offset);
+                                                                    &player1.position);
                                                     SDL_Flip(screen);
                                                     SDL_Delay(100);
-                                                    offset.x = 15, offset.y = 170;
+                                                    player1.position.x = 15, player1.position.y = 170;
                                                     break;
                                                 }
                                             }
@@ -1084,7 +1148,7 @@ int main(int argc, char *args[]) {
                                                            pontuacao01, screen);
                                             pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                            pontuacao01, screen);
-                                            jogador_load(posicao1, offset, jogador1, jogador1_c,
+                                            jogador_load(player1.direction, player1.position, player1.spriteSurface, jogador1_c,
                                                          screen);
                                             SDL_Flip(screen);
                                             break;
@@ -1100,29 +1164,29 @@ int main(int argc, char *args[]) {
                                                                pontuacao01, screen);
                                                 pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                                pontuacao01, screen);
-                                                jogador_load(posicao1, offset, jogador1, jogador1_c,
+                                                jogador_load(player1.direction, player1.position, player1.spriteSurface, jogador1_c,
                                                              screen);
                                                 SDL_BlitSurface(bala, NULL, screen, &offset3);
                                                 SDL_Flip(screen);
                                                 SDL_Delay(50);
-                                                andar(event, screen, telaprincipal, jogador1,
+                                                andar(event, screen, telaprincipal, player1.spriteSurface,
                                                       jogador2, bala, explosao, pontuacao,
                                                       pontuacao01, jogador1_c, jogador2_c, wall,
                                                       menu, offset3, pontuacao02, pontuacao03,
                                                       bala01, vencedor, quit1, quit2, x, entrar,
                                                       bala1, bala2, pontuacao1, pontuacao2,
-                                                      vencedor0);
-                                                if (!checkCollisionBetweenTwoRects(offset.x, offset.y, offset.w, offset.h,
+                                                      vencedor0, player1.direction, player1.position);
+                                                if (!checkCollisionBetweenTwoRects(player1.position.x, player1.position.y, player1.position.w, player1.position.h,
                                                              offset3.x, offset3.y, offset3.w,
                                                              offset3.h)) {
                                                     pontuacao2 = pontuacao2 + 1;
                                                     pontuacao_load(pontuacao2, pontuacao03,
                                                                    pontuacao, pontuacao01, screen);
                                                     SDL_BlitSurface(explosao, NULL, screen,
-                                                                    &offset);
+                                                                    &player1.position);
                                                     SDL_Flip(screen);
                                                     SDL_Delay(100);
-                                                    offset.x = 15, offset.y = 170;
+                                                    player1.position.x = 15, player1.position.y = 170;
                                                     break;
                                                 }
                                             }
@@ -1135,7 +1199,7 @@ int main(int argc, char *args[]) {
                                                            pontuacao01, screen);
                                             pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                            pontuacao01, screen);
-                                            jogador_load(posicao1, offset, jogador1, jogador1_c,
+                                            jogador_load(player1.direction, player1.position, player1.spriteSurface, jogador1_c,
                                                          screen);
                                             SDL_Flip(screen);
                                             break;
@@ -1151,29 +1215,29 @@ int main(int argc, char *args[]) {
                                                                pontuacao01, screen);
                                                 pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                                pontuacao01, screen);
-                                                jogador_load(posicao1, offset, jogador1, jogador1_c,
+                                                jogador_load(player1.direction, player1.position, player1.spriteSurface, jogador1_c,
                                                              screen);
                                                 SDL_BlitSurface(bala, NULL, screen, &offset3);
                                                 SDL_Flip(screen);
                                                 SDL_Delay(50);
-                                                andar(event, screen, telaprincipal, jogador1,
+                                                andar(event, screen, telaprincipal, player1.spriteSurface,
                                                       jogador2, bala, explosao, pontuacao,
                                                       pontuacao01, jogador1_c, jogador2_c, wall,
                                                       menu, offset3, pontuacao02, pontuacao03,
                                                       bala01, vencedor, quit1, quit2, x, entrar,
                                                       bala1, bala2, pontuacao1, pontuacao2,
-                                                      vencedor0);
-                                                if (!checkCollisionBetweenTwoRects(offset.x, offset.y, offset.w, offset.h,
+                                                      vencedor0, player1.direction, player1.position);
+                                                if (!checkCollisionBetweenTwoRects(player1.position.x, player1.position.y, player1.position.w, player1.position.h,
                                                              offset3.x, offset3.y, offset3.w,
                                                              offset3.h)) {
                                                     pontuacao2 = pontuacao2 + 1;
                                                     pontuacao_load(pontuacao2, pontuacao03,
                                                                    pontuacao, pontuacao01, screen);
                                                     SDL_BlitSurface(explosao, NULL, screen,
-                                                                    &offset);
+                                                                    &player1.position);
                                                     SDL_Flip(screen);
                                                     SDL_Delay(100);
-                                                    offset.x = 15, offset.y = 170;
+                                                    player1.position.x = 15, player1.position.y = 170;
                                                     break;
                                                 }
                                             }
@@ -1186,7 +1250,7 @@ int main(int argc, char *args[]) {
                                                            pontuacao01, screen);
                                             pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                            pontuacao01, screen);
-                                            jogador_load(posicao1, offset, jogador1, jogador1_c,
+                                            jogador_load(player1.direction, player1.position, player1.spriteSurface, jogador1_c,
                                                          screen);
                                             SDL_Flip(screen);
                                             break;
@@ -1202,29 +1266,29 @@ int main(int argc, char *args[]) {
                                                                pontuacao01, screen);
                                                 pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                                pontuacao01, screen);
-                                                jogador_load(posicao1, offset, jogador1, jogador1_c,
+                                                jogador_load(player1.direction, player1.position, player1.spriteSurface, jogador1_c,
                                                              screen);
                                                 SDL_BlitSurface(bala, NULL, screen, &offset3);
                                                 SDL_Flip(screen);
                                                 SDL_Delay(50);
-                                                andar(event, screen, telaprincipal, jogador1,
+                                                andar(event, screen, telaprincipal, player1.spriteSurface,
                                                       jogador2, bala, explosao, pontuacao,
                                                       pontuacao01, jogador1_c, jogador2_c, wall,
                                                       menu, offset3, pontuacao02, pontuacao03,
                                                       bala01, vencedor, quit1, quit2, x, entrar,
                                                       bala1, bala2, pontuacao1, pontuacao2,
-                                                      vencedor0);
-                                                if (!checkCollisionBetweenTwoRects(offset.x, offset.y, offset.w, offset.h,
+                                                      vencedor0, player1.direction, player1.position);
+                                                if (!checkCollisionBetweenTwoRects(player1.position.x, player1.position.y, player1.position.w, player1.position.h,
                                                              offset3.x, offset3.y, offset3.w,
                                                              offset3.h)) {
                                                     pontuacao2 = pontuacao2 + 1;
                                                     pontuacao_load(pontuacao2, pontuacao03,
                                                                    pontuacao, pontuacao01, screen);
                                                     SDL_BlitSurface(explosao, NULL, screen,
-                                                                    &offset);
+                                                                    &player1.position);
                                                     SDL_Flip(screen);
                                                     SDL_Delay(100);
-                                                    offset.x = 15, offset.y = 170;
+                                                    player1.position.x = 15, player1.position.y = 170;
                                                     break;
                                                 }
                                             }
@@ -1237,7 +1301,7 @@ int main(int argc, char *args[]) {
                                                            pontuacao01, screen);
                                             pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                            pontuacao01, screen);
-                                            jogador_load(posicao1, offset, jogador1, jogador1_c,
+                                            jogador_load(player1.direction, player1.position, player1.spriteSurface, jogador1_c,
                                                          screen);
                                             SDL_Flip(screen);
                                             break;
@@ -1260,6 +1324,21 @@ int main(int argc, char *args[]) {
                         quit2 = 1;
                     }
                 }
+
+                // Here it should be the drawing logic!
+                
+                SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
+                
+                jogador_load(player1.direction, player1.position, player1.spriteSurface, jogador1_c,
+                                screen);
+                jogador_load(posicao2, offset2, jogador2, jogador2_c,
+                                screen);
+                pontuacao_load(pontuacao2, pontuacao03, pontuacao,
+                                pontuacao01, screen);
+                pontuacao_load(pontuacao1, pontuacao02, pontuacao,
+                                pontuacao01, screen);
+                SDL_Flip(screen);
+
                 // condi��es para verificar a vitoria dos jogadores
                 if (pontuacao1 == 6)  // verificar vitoria do jogador 1
                 {
