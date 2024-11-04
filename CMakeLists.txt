@@ -6,14 +6,14 @@
 cmake_minimum_required(VERSION 3.10)
 
 # Project Name and Language
-project(CampoDeBatalha C)
+project(CampoDeBatalha CXX)
 
-# Set the C standard (optional)
-set(CMAKE_C_STANDARD 99)
-set(CMAKE_C_STANDARD_REQUIRED True)
+# Set the C++ standard
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Compiler Flags
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -g")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -g")
 
 # Include Directories
 include_directories(
@@ -26,8 +26,8 @@ link_directories(
     C:/msys64/ucrt64/lib
 )
 
-# Source Files
-file(GLOB SRC_FILES "${PROJECT_SOURCE_DIR}/src/*.c")
+# Source Files (using .cpp files)
+file(GLOB SRC_FILES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 
 # Executable Output
 add_executable(campo_de_batalha ${SRC_FILES})
