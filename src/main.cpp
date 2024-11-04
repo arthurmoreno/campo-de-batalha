@@ -10,6 +10,8 @@
 #include <SDL.h>
 #endif
 
+enum struct DirectionEnum { UP = 0, DOWN = 1, RIGHT = 2, LEFT = 3};
+
 SDL_Rect offset;         // coordenada do jogador 1
 SDL_Rect offset2;        // coordenada do jogador 2
 int posicao1, posicao2;  // variavel para determinacaoo das posicoes dos jogadores
@@ -640,7 +642,7 @@ int main(int argc, char *args[]) {
                                         pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                        pontuacao01, screen);
                                         SDL_Flip(screen);
-                                        posicao1 = 0;
+                                        posicao1 = static_cast<int>(DirectionEnum::UP);
                                         break;
                                     } else {
                                         pontuacao2 = pontuacao2 + 1;
@@ -664,7 +666,7 @@ int main(int argc, char *args[]) {
                                         pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                        pontuacao01, screen);
                                         SDL_Flip(screen);
-                                        posicao1 = 1;
+                                        posicao1 = static_cast<int>(DirectionEnum::DOWN);
                                         break;
                                     } else {
                                         pontuacao2 = pontuacao2 + 1;
@@ -688,7 +690,7 @@ int main(int argc, char *args[]) {
                                         pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                        pontuacao01, screen);
                                         SDL_Flip(screen);
-                                        posicao1 = 2;
+                                        posicao1 = static_cast<int>(DirectionEnum::RIGHT);
                                         break;
                                     } else {
                                         pontuacao2 = pontuacao2 + 1;
@@ -712,7 +714,7 @@ int main(int argc, char *args[]) {
                                         pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                        pontuacao01, screen);
                                         SDL_Flip(screen);
-                                        posicao1 = 3;
+                                        posicao1 = static_cast<int>(DirectionEnum::LEFT);
                                         break;
                                     } else {
                                         pontuacao2 = pontuacao2 + 1;
@@ -737,7 +739,7 @@ int main(int argc, char *args[]) {
                                         pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                        pontuacao01, screen);
                                         SDL_Flip(screen);
-                                        posicao2 = 0;
+                                        posicao2 = static_cast<int>(DirectionEnum::UP);
                                         break;
                                     } else {
                                         pontuacao1 = pontuacao1 + 1;
@@ -761,7 +763,7 @@ int main(int argc, char *args[]) {
                                         pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                        pontuacao01, screen);
                                         SDL_Flip(screen);
-                                        posicao2 = 1;
+                                        posicao2 = static_cast<int>(DirectionEnum::DOWN);
                                         break;
                                     } else {
                                         pontuacao1 = pontuacao1 + 1;
@@ -785,7 +787,7 @@ int main(int argc, char *args[]) {
                                         pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                        pontuacao01, screen);
                                         SDL_Flip(screen);
-                                        posicao2 = 2;
+                                        posicao2 = static_cast<int>(DirectionEnum::RIGHT);
                                         break;
                                     } else {
                                         pontuacao1 = pontuacao1 + 1;
@@ -809,7 +811,7 @@ int main(int argc, char *args[]) {
                                         pontuacao_load(pontuacao1, pontuacao02, pontuacao,
                                                        pontuacao01, screen);
                                         SDL_Flip(screen);
-                                        posicao2 = 3;
+                                        posicao2 = static_cast<int>(DirectionEnum::LEFT);
                                         break;
                                     } else {
                                         pontuacao1 = pontuacao1 + 1;
@@ -827,7 +829,7 @@ int main(int argc, char *args[]) {
                                 // comandos para o tiro dos jogadores 1 e 2
                                 case SDLK_m:  // tecla m para o tiro do jogador 1
                                     switch (posicao1) {
-                                        case 0:
+                                        case static_cast<int>(DirectionEnum::UP):
                                             offset3.x = offset.x + 12;
                                             offset3.y = offset.y - 12;
                                             for (bala1 = 1; bala1 < 10; bala1 = bala1 + 1) {
@@ -878,7 +880,7 @@ int main(int argc, char *args[]) {
                                                          screen);
                                             SDL_Flip(screen);
                                             break;
-                                        case 1:
+                                        case static_cast<int>(DirectionEnum::DOWN):
                                             offset3.x = offset.x + 12;
                                             offset3.y = offset.y + 36;
                                             for (bala1 = 1; bala1 < 10; bala1 = bala1 + 1) {
@@ -929,7 +931,7 @@ int main(int argc, char *args[]) {
                                                          screen);
                                             SDL_Flip(screen);
                                             break;
-                                        case 2:
+                                        case static_cast<int>(DirectionEnum::RIGHT):
                                             offset3.x = offset.x + 36;
                                             offset3.y = offset.y + 12;
                                             for (bala1 = 1; bala1 < 10; bala1 = bala1 + 1) {
@@ -980,7 +982,7 @@ int main(int argc, char *args[]) {
                                                          screen);
                                             SDL_Flip(screen);
                                             break;
-                                        case 3:
+                                        case static_cast<int>(DirectionEnum::LEFT):
                                             offset3.x = offset.x - 12;
                                             offset3.y = offset.y + 12;
                                             for (bala1 = 1; bala1 < 10; bala1 = bala1 + 1) {
@@ -1035,7 +1037,7 @@ int main(int argc, char *args[]) {
                                     break;
                                 case SDLK_f:  // tecla f para o jogador 2
                                     switch (posicao2) {
-                                        case 0:
+                                        case static_cast<int>(DirectionEnum::UP):
                                             offset3.x = offset2.x + 12;
                                             offset3.y = offset2.y - 12;
                                             for (bala1 = 1; bala1 < 10; bala1 = bala1 + 1) {
@@ -1086,7 +1088,7 @@ int main(int argc, char *args[]) {
                                                          screen);
                                             SDL_Flip(screen);
                                             break;
-                                        case 1:
+                                        case static_cast<int>(DirectionEnum::DOWN):
                                             offset3.x = offset2.x + 12;
                                             offset3.y = offset2.y + 36;
                                             for (bala1 = 1; bala1 < 10; bala1 = bala1 + 1) {
@@ -1137,7 +1139,7 @@ int main(int argc, char *args[]) {
                                                          screen);
                                             SDL_Flip(screen);
                                             break;
-                                        case 2:
+                                        case static_cast<int>(DirectionEnum::RIGHT):
                                             offset3.x = offset2.x + 36;
                                             offset3.y = offset2.y + 12;
                                             for (bala1 = 1; bala1 < 10; bala1 = bala1 + 1) {
@@ -1188,7 +1190,7 @@ int main(int argc, char *args[]) {
                                                          screen);
                                             SDL_Flip(screen);
                                             break;
-                                        case 3:
+                                        case static_cast<int>(DirectionEnum::LEFT):
                                             offset3.x = offset2.x - 12;
                                             offset3.y = offset2.y + 12;
                                             for (bala1 = 1; bala1 < 10; bala1 = bala1 + 1) {
