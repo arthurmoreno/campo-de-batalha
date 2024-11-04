@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Campo de Batalha" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin\Debug\Campo de Batalha" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj\Debug\" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add directory="..\..\..\raknet" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin\Release\Campo de Batalha" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj\Release\" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+			<Target title="biblioteca">
+				<Option output="Campo de Batalha" prefix_auto="1" extension_auto="1" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Linker>
+					<Add library="C:\Arthur\meus programas\SDL-1.2.14\lib\libSDL.dll.a" />
+					<Add library="C:\Arthur\meus programas\SDL-1.2.14\lib\libSDLmain.a" />
+					<Add directory="C:\Arthur\meus programas\SDL-1.2.14\lib" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add directory="C:\Arthur\meus programas\SDL-1.2.14\include" />
+			<Add directory="..\..\SDL_mixer-1.2.11\include" />
+		</Compiler>
+		<Linker>
+			<Add library="mingw32" />
+			<Add library="SDLmain" />
+			<Add library="SDL.dll" />
+			<Add library="user32" />
+			<Add library="gdi32" />
+			<Add library="winmm" />
+			<Add library="dxguid" />
+			<Add library="..\..\SDL_mixer-1.2.11\lib\SDL_mixer.lib" />
+			<Add library="..\..\..\..\Program Files (x86)\CodeBlocks\MinGW\lib\libwin32k.a" />
+			<Add library="..\..\..\..\Program Files (x86)\CodeBlocks\MinGW\lib\libws2_32.a" />
+			<Add directory="C:\Arthur\meus programas\SDL-1.2.14\lib" />
+			<Add directory="..\..\SDL_mixer-1.2.11\lib" />
+		</Linker>
+		<Unit filename="biblioteca.c">
+			<Option compilerVar="CC" />
+			<Option target="biblioteca" />
+		</Unit>
+		<Unit filename="biblioteca.h">
+			<Option target="biblioteca" />
+		</Unit>
+		<Unit filename="cb.bmp">
+			<Option target="Debug" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="main.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug" />
+			<Option target="biblioteca" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
