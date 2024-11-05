@@ -1328,7 +1328,8 @@ int main(int argc, char *args[]) {
                 }
 
                 for (auto projectile = projectiles.begin(); projectile != projectiles.end(); ) {
-                    SDL_BlitSurface(projectile->spriteSurface, NULL, screen, &projectile->position);
+                    SDL_Rect blitPosition = projectile->position;
+                    SDL_BlitSurface(projectile->spriteSurface, NULL, screen, &blitPosition);
                     
                     if (projectile->movingCooldown > 0) {
                         projectile->movingCooldown--;
@@ -1357,7 +1358,6 @@ int main(int argc, char *args[]) {
                             {
                                 projectile->position.x--;
                                 projectile->movingCooldown = PROJECTILE_MOVING_COOLDOWN;
-                                std::cout << "Projectile moving left. Subtracting X - X value: " << projectile->position.x << std::endl;
                             }
                             break;
 
@@ -1366,8 +1366,8 @@ int main(int argc, char *args[]) {
                         }
                     }
                     if (
-                        projectile->position.x < 0 || projectile->position.x > 1000 ||
-                        projectile->position.y < 0 || projectile->position.y > 1000
+                        projectile->position.x < -10 || projectile->position.x > 1000 ||
+                        projectile->position.y < -10 || projectile->position.y > 1000
                     ) {
                         std::cout << "Before erase projectile" << std::endl;
                         projectile = projectiles.erase(projectile);    // erase returns the next valid iterator
