@@ -1,6 +1,6 @@
 // Player.hpp
-#ifndef PLAYER_H
-#define PLAYER_H
+#ifndef PROJECTILE_H
+#define PROJECTILE_H
 
 #ifdef __APPLE__
 #include <SDL/SDL.h>
@@ -11,24 +11,20 @@
 #include "Constants.hpp"
 #include "SpriteSet.hpp"
 
-
-
-class Player {
+class Projectile {
 public:
-    std::string playerName;
+    int projectileId;
     SpriteSet spriteSet;
     SDL_Surface *spriteSurface;
 
     int direction;
     SDL_Rect position;
+    
+    int movingCooldown;
 
-    int timer;
-    PlayerStateEnum state;
-
-    Player(const std::string& playerName)
-        : playerName(playerName), spriteSet("Jogador1") // Initialize spriteSet here
+    Projectile(const int projectileId)
+        : projectileId(projectileId), spriteSet("Bala") // Initialize spriteSet here
     {
-        state = PlayerStateEnum::IDLE;
         direction = static_cast<int>(DirectionEnum::RIGHT);
         spriteSet.addRect(directionToString(DirectionEnum::RIGHT), 0, 0, 32, 32);      // Virado para direita
         spriteSet.addRect(directionToString(DirectionEnum::UP),    34, 34, 32, 32);    // Virado para cima
@@ -52,4 +48,4 @@ public:
 private:
 };
 
-#endif // PLAYER_H
+#endif // PROJECTILE_H
