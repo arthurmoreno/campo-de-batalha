@@ -88,12 +88,13 @@ bool checkCollisionBetweenTwoRects(int ax, int ay, int aw, int ah, int cx, int c
     return (((ax > dx) || (bx < cx) || (ay > dy) || (by < cy)));
 }
 
-bool checkCollisionPlayer1(SDL_Rect& offset, SDL_Rect& offset2, SDL_Rect& wall, SDL_Rect& menu,
-                           std::vector<Projectile>& projectiles) {
+bool checkCollision(SDL_Rect& firstPlayerPosition, SDL_Rect& secondPlayerPosition, SDL_Rect& wall,
+                    SDL_Rect& menu, std::vector<Projectile>& projectiles) {
     bool notCollidedWithProjectile = true;
     for (auto projectile = projectiles.begin(); projectile != projectiles.end();) {
         bool _notCollidedWithProjectile = checkCollisionBetweenTwoRects(
-            offset.x, offset.y, offset.w, offset.h, projectile->position.x, projectile->position.y,
+            firstPlayerPosition.x, firstPlayerPosition.y, firstPlayerPosition.w,
+            firstPlayerPosition.h, projectile->position.x, projectile->position.y,
             projectile->position.w, projectile->position.h);
         std::cout << "Not collided with projectile: " << _notCollidedWithProjectile << std::endl;
         notCollidedWithProjectile = (notCollidedWithProjectile && _notCollidedWithProjectile);
@@ -106,38 +107,15 @@ bool checkCollisionPlayer1(SDL_Rect& offset, SDL_Rect& offset2, SDL_Rect& wall, 
         }
     }
 
-    return (checkCollisionBetweenTwoRects(offset.x, offset.y, offset.w, offset.h, wall.x, wall.y,
-                                          wall.w, wall.h) &&
-            checkCollisionBetweenTwoRects(offset.x, offset.y, offset.w, offset.h, offset2.x,
-                                          offset2.y, offset2.w, offset2.h) &&
-            checkCollisionBetweenTwoRects(offset.x, offset.y, offset.w, offset.h, menu.x, menu.y,
-                                          menu.w, menu.h) &&
-            notCollidedWithProjectile);
-}
-
-bool checkCollisionPlayer2(SDL_Rect& offset, SDL_Rect& offset2, SDL_Rect& wall, SDL_Rect& menu,
-                           std::vector<Projectile>& projectiles) {
-    bool notCollidedWithProjectile = true;
-    for (auto projectile = projectiles.begin(); projectile != projectiles.end();) {
-        bool _notCollidedWithProjectile = checkCollisionBetweenTwoRects(
-            offset2.x, offset2.y, offset2.w, offset2.h, projectile->position.x,
-            projectile->position.y, projectile->position.w, projectile->position.h);
-        std::cout << "Not collided with projectile: " << _notCollidedWithProjectile << std::endl;
-        notCollidedWithProjectile = (notCollidedWithProjectile && _notCollidedWithProjectile);
-
-        if (!_notCollidedWithProjectile) {
-            // Collision detected, remove projectile
-            projectile = projectiles.erase(projectile);  // Erase returns the next iterator
-        } else {
-            ++projectile;  // Move to the next element
-        }
-    }
-
-    return (checkCollisionBetweenTwoRects(offset2.x, offset2.y, offset2.w, offset2.h, wall.x,
+    return (checkCollisionBetweenTwoRects(firstPlayerPosition.x, firstPlayerPosition.y,
+                                          firstPlayerPosition.w, firstPlayerPosition.h, wall.x,
                                           wall.y, wall.w, wall.h) &&
-            checkCollisionBetweenTwoRects(offset.x, offset.y, offset.w, offset.h, offset2.x,
-                                          offset2.y, offset2.w, offset2.h) &&
-            checkCollisionBetweenTwoRects(offset2.x, offset2.y, offset2.w, offset2.h, menu.x,
+            checkCollisionBetweenTwoRects(firstPlayerPosition.x, firstPlayerPosition.y,
+                                          firstPlayerPosition.w, firstPlayerPosition.h,
+                                          secondPlayerPosition.x, secondPlayerPosition.y,
+                                          secondPlayerPosition.w, secondPlayerPosition.h) &&
+            checkCollisionBetweenTwoRects(firstPlayerPosition.x, firstPlayerPosition.y,
+                                          firstPlayerPosition.w, firstPlayerPosition.h, menu.x,
                                           menu.y, menu.w, menu.h) &&
             notCollidedWithProjectile);
 }
@@ -309,9 +287,8 @@ int main(int argc, char* args[]) {
                             switch (event.key.keysym.sym) {  // comandos para o jogador 1
                                 case SDLK_UP:                // tecla para cima
                                     if (player1.state == PlayerStateEnum::IDLE) {
-                                        if (checkCollisionPlayer1(player1.position,
-                                                                  player2.position, wall, menu,
-                                                                  projectiles)) {
+                                        if (checkCollision(player1.position, player2.position, wall,
+                                                           menu, projectiles)) {
                                             player1.position.y = player1.position.y - 6;
                                             player1.setDirection(DirectionEnum::UP);
                                             break;
@@ -320,9 +297,8 @@ int main(int argc, char* args[]) {
                                     break;
                                 case SDLK_DOWN:  // tecla para baixo
                                     if (player1.state == PlayerStateEnum::IDLE) {
-                                        if (checkCollisionPlayer1(player1.position,
-                                                                  player2.position, wall, menu,
-                                                                  projectiles)) {
+                                        if (checkCollision(player1.position, player2.position, wall,
+                                                           menu, projectiles)) {
                                             // Update position and direction of player1
                                             player1.position.y = player1.position.y + 6;
                                             player1.setDirection(DirectionEnum::DOWN);
@@ -332,9 +308,8 @@ int main(int argc, char* args[]) {
                                     break;
                                 case SDLK_RIGHT:  // tecla para a direita
                                     if (player1.state == PlayerStateEnum::IDLE) {
-                                        if (checkCollisionPlayer1(player1.position,
-                                                                  player2.position, wall, menu,
-                                                                  projectiles)) {
+                                        if (checkCollision(player1.position, player2.position, wall,
+                                                           menu, projectiles)) {
                                             // Update position and direction of player1
                                             player1.position.x = player1.position.x + 6;
                                             player1.setDirection(DirectionEnum::RIGHT);
@@ -344,9 +319,8 @@ int main(int argc, char* args[]) {
                                     break;
                                 case SDLK_LEFT:  // tecla para esquerda
                                     if (player1.state == PlayerStateEnum::IDLE) {
-                                        if (checkCollisionPlayer1(player1.position,
-                                                                  player2.position, wall, menu,
-                                                                  projectiles)) {
+                                        if (checkCollision(player1.position, player2.position, wall,
+                                                           menu, projectiles)) {
                                             // Update position and direction of player1
                                             player1.position.x = player1.position.x - 6;
                                             player1.setDirection(DirectionEnum::LEFT);
@@ -357,9 +331,8 @@ int main(int argc, char* args[]) {
                                 // comandos para o jogador 2
                                 case SDLK_w:  // tecla w ( para cima )
                                     if (player2.state == PlayerStateEnum::IDLE) {
-                                        if (checkCollisionPlayer2(player1.position,
-                                                                  player2.position, wall, menu,
-                                                                  projectiles)) {
+                                        if (checkCollision(player2.position, player1.position, wall,
+                                                           menu, projectiles)) {
                                             // Update position and direction of player2
                                             player2.position.y = player2.position.y - 6;
                                             player2.setDirection(DirectionEnum::UP);
@@ -369,9 +342,8 @@ int main(int argc, char* args[]) {
                                     break;
                                 case SDLK_s:  // tecla s ( para baixo )
                                     if (player2.state == PlayerStateEnum::IDLE) {
-                                        if (checkCollisionPlayer2(player1.position,
-                                                                  player2.position, wall, menu,
-                                                                  projectiles)) {
+                                        if (checkCollision(player2.position, player1.position, wall,
+                                                           menu, projectiles)) {
                                             // Update position and direction of player2
                                             player2.position.y = player2.position.y + 6;
                                             player2.setDirection(DirectionEnum::DOWN);
@@ -381,9 +353,8 @@ int main(int argc, char* args[]) {
                                     break;
                                 case SDLK_d:  // tecla d ( para direita )
                                     if (player2.state == PlayerStateEnum::IDLE) {
-                                        if (checkCollisionPlayer2(player1.position,
-                                                                  player2.position, wall, menu,
-                                                                  projectiles)) {
+                                        if (checkCollision(player2.position, player1.position, wall,
+                                                           menu, projectiles)) {
                                             // Update position and direction of player2
                                             player2.position.x = player2.position.x + 6;
                                             player2.setDirection(DirectionEnum::RIGHT);
@@ -393,9 +364,8 @@ int main(int argc, char* args[]) {
                                     break;
                                 case SDLK_a:  // tecla a ( para esquerda )
                                     if (player2.state == PlayerStateEnum::IDLE) {
-                                        if (checkCollisionPlayer2(player1.position,
-                                                                  player2.position, wall, menu,
-                                                                  projectiles)) {
+                                        if (checkCollision(player2.position, player1.position, wall,
+                                                           menu, projectiles)) {
                                             // Update position and direction of player2
                                             player2.position.x = player2.position.x - 6;
                                             player2.setDirection(DirectionEnum::LEFT);
@@ -508,7 +478,7 @@ int main(int argc, char* args[]) {
                 }
 
                 if (player1.state != PlayerStateEnum::EXPLODING &&
-                    !checkCollisionPlayer1(player1.position, player2.position, wall, menu,
+                    !checkCollision(player1.position, player2.position, wall, menu,
                                            projectiles)) {
                     pontuacao2 = pontuacao2 + 1;
                     player1.state = PlayerStateEnum::EXPLODING;
@@ -516,7 +486,7 @@ int main(int argc, char* args[]) {
                 }
 
                 if (player2.state != PlayerStateEnum::EXPLODING &&
-                    !checkCollisionPlayer2(player1.position, player2.position, wall, menu,
+                    !checkCollision(player2.position, player1.position, wall, menu,
                                            projectiles)) {
                     pontuacao1 = pontuacao1 + 1;
                     player2.state = PlayerStateEnum::EXPLODING;
