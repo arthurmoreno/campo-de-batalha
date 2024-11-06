@@ -11,13 +11,11 @@
 #include "Constants.hpp"
 #include "SpriteSet.hpp"
 
-
-
 class Player {
-public:
+   public:
     std::string playerName;
     SpriteSet spriteSet;
-    SDL_Surface *spriteSurface;
+    SDL_Surface* spriteSurface;
 
     int direction;
     SDL_Rect position;
@@ -26,30 +24,31 @@ public:
     PlayerStateEnum state;
 
     Player(const std::string& playerName)
-        : playerName(playerName), spriteSet("Jogador1") // Initialize spriteSet here
+        : playerName(playerName),
+          spriteSet("Jogador1")  // Initialize spriteSet here
     {
         state = PlayerStateEnum::IDLE;
         direction = static_cast<int>(DirectionEnum::RIGHT);
-        spriteSet.addRect(directionToString(DirectionEnum::RIGHT), 0, 0, 32, 32);      // Virado para direita
-        spriteSet.addRect(directionToString(DirectionEnum::UP),    34, 34, 32, 32);    // Virado para cima
-        spriteSet.addRect(directionToString(DirectionEnum::DOWN),  34, 0, 32, 32);     // Virado para baixo
-        spriteSet.addRect(directionToString(DirectionEnum::LEFT),  0, 34, 32, 32);     // Virado para esquerda
-
+        spriteSet.addRect(directionToString(DirectionEnum::RIGHT), 0, 0, 32,
+                          32);  // Virado para direita
+        spriteSet.addRect(directionToString(DirectionEnum::UP), 34, 34, 32,
+                          32);  // Virado para cima
+        spriteSet.addRect(directionToString(DirectionEnum::DOWN), 34, 0, 32,
+                          32);  // Virado para baixo
+        spriteSet.addRect(directionToString(DirectionEnum::LEFT), 0, 34, 32,
+                          32);  // Virado para esquerda
     };
 
     void loadSprite(const std::string& spriteFileName) {
         spriteSurface = SDL_LoadBMP(spriteFileName.c_str());
         SDL_SetColorKey(spriteSurface, SDL_SRCCOLORKEY | SDL_RLEACCEL,
                         (Uint16)SDL_MapRGB(spriteSurface->format, 0, 255,
-                                            0));  // para por transparencia no verde.
+                                           0));  // para por transparencia no verde.
     };
 
-    void setDirection(DirectionEnum directionEnum) {
-        direction = static_cast<int>(directionEnum);
-    }
+    void setDirection(DirectionEnum directionEnum) { direction = static_cast<int>(directionEnum); }
 
-
-private:
+   private:
 };
 
-#endif // PLAYER_H
+#endif  // PLAYER_H

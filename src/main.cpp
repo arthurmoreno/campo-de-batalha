@@ -1,7 +1,8 @@
-#include <iostream>
 #include <stdlib.h>
 #include <windows.h>
 #include <winsock2.h>
+
+#include <iostream>
 #include <vector>
 
 #define SDL_MAIN_HANDLED  // Add this line
@@ -13,13 +14,13 @@
 #endif
 
 #include "Constants.hpp"
-#include "SpriteSet.hpp"
 #include "Player.hpp"
 #include "Projectile.hpp"
+#include "SpriteSet.hpp"
 
 // funcao para carregar os tanques na tela
-void jogador_load(int playerPosition, SDL_Rect offset2, SDL_Surface *jogador2, SpriteSet& playerSpriteSet,
-                  SDL_Surface *screen) {
+void jogador_load(int playerPosition, SDL_Rect offset2, SDL_Surface* jogador2,
+                  SpriteSet& playerSpriteSet, SDL_Surface* screen) {
     SDL_Rect playerSpriteRect;
     switch (playerPosition) {
         case static_cast<int>(DirectionEnum::UP):
@@ -42,8 +43,8 @@ void jogador_load(int playerPosition, SDL_Rect offset2, SDL_Surface *jogador2, S
 }
 
 // funcao para carregar as pontuacoes dos jogadores na tela
-void pontuacao_load(int pontuacao3, SDL_Rect pontuacao03, SDL_Surface *pontuacao,
-                    SpriteSet& pontuacao01, SDL_Surface *screen) {
+void pontuacao_load(int pontuacao3, SDL_Rect pontuacao03, SDL_Surface* pontuacao,
+                    SpriteSet& pontuacao01, SDL_Surface* screen) {
     SDL_Rect pontuacaoSpriteRect;
     switch (pontuacao3) {
         case 0:
@@ -87,82 +88,68 @@ bool checkCollisionBetweenTwoRects(int ax, int ay, int aw, int ah, int cx, int c
     return (((ax > dx) || (bx < cx) || (ay > dy) || (by < cy)));
 }
 
-bool checkCollisionPlayer1(SDL_Rect& offset, SDL_Rect& offset2, SDL_Rect& wall, SDL_Rect& menu, std::vector<Projectile>& projectiles) {
-
+bool checkCollisionPlayer1(SDL_Rect& offset, SDL_Rect& offset2, SDL_Rect& wall, SDL_Rect& menu,
+                           std::vector<Projectile>& projectiles) {
     bool notCollidedWithProjectile = true;
-    for (auto projectile = projectiles.begin(); projectile != projectiles.end(); ) {
+    for (auto projectile = projectiles.begin(); projectile != projectiles.end();) {
         bool _notCollidedWithProjectile = checkCollisionBetweenTwoRects(
-                offset.x, offset.y, offset.w, offset.h,
-                projectile->position.x, projectile->position.y,
-                projectile->position.w, projectile->position.h
-            );
+            offset.x, offset.y, offset.w, offset.h, projectile->position.x, projectile->position.y,
+            projectile->position.w, projectile->position.h);
         std::cout << "Not collided with projectile: " << _notCollidedWithProjectile << std::endl;
-        notCollidedWithProjectile = (
-            notCollidedWithProjectile && _notCollidedWithProjectile
-        );
+        notCollidedWithProjectile = (notCollidedWithProjectile && _notCollidedWithProjectile);
 
         if (!_notCollidedWithProjectile) {
             // Collision detected, remove projectile
-            projectile = projectiles.erase(projectile); // Erase returns the next iterator
+            projectile = projectiles.erase(projectile);  // Erase returns the next iterator
         } else {
-            ++projectile; // Move to the next element
+            ++projectile;  // Move to the next element
         }
     }
 
-    return (
-        checkCollisionBetweenTwoRects(
-            offset.x, offset.y, offset.w, offset.h, wall.x, wall.y, wall.w,
-                                wall.h) &&
-        checkCollisionBetweenTwoRects(offset.x, offset.y, offset.w, offset.h, offset2.x, offset2.y,
-                offset2.w, offset2.h) &&
-        checkCollisionBetweenTwoRects(offset.x, offset.y, offset.w, offset.h, menu.x, menu.y, menu.w,
-                menu.h) &&
-        notCollidedWithProjectile
-    );
+    return (checkCollisionBetweenTwoRects(offset.x, offset.y, offset.w, offset.h, wall.x, wall.y,
+                                          wall.w, wall.h) &&
+            checkCollisionBetweenTwoRects(offset.x, offset.y, offset.w, offset.h, offset2.x,
+                                          offset2.y, offset2.w, offset2.h) &&
+            checkCollisionBetweenTwoRects(offset.x, offset.y, offset.w, offset.h, menu.x, menu.y,
+                                          menu.w, menu.h) &&
+            notCollidedWithProjectile);
 }
 
-
-bool checkCollisionPlayer2(SDL_Rect& offset, SDL_Rect& offset2, SDL_Rect& wall, SDL_Rect& menu, std::vector<Projectile>& projectiles) {
-
+bool checkCollisionPlayer2(SDL_Rect& offset, SDL_Rect& offset2, SDL_Rect& wall, SDL_Rect& menu,
+                           std::vector<Projectile>& projectiles) {
     bool notCollidedWithProjectile = true;
-    for (auto projectile = projectiles.begin(); projectile != projectiles.end(); ) {
+    for (auto projectile = projectiles.begin(); projectile != projectiles.end();) {
         bool _notCollidedWithProjectile = checkCollisionBetweenTwoRects(
-                offset2.x, offset2.y, offset2.w, offset2.h,
-                projectile->position.x, projectile->position.y,
-                projectile->position.w, projectile->position.h
-            );
+            offset2.x, offset2.y, offset2.w, offset2.h, projectile->position.x,
+            projectile->position.y, projectile->position.w, projectile->position.h);
         std::cout << "Not collided with projectile: " << _notCollidedWithProjectile << std::endl;
-        notCollidedWithProjectile = (
-            notCollidedWithProjectile && _notCollidedWithProjectile
-        );
+        notCollidedWithProjectile = (notCollidedWithProjectile && _notCollidedWithProjectile);
 
         if (!_notCollidedWithProjectile) {
             // Collision detected, remove projectile
-            projectile = projectiles.erase(projectile); // Erase returns the next iterator
+            projectile = projectiles.erase(projectile);  // Erase returns the next iterator
         } else {
-            ++projectile; // Move to the next element
+            ++projectile;  // Move to the next element
         }
     }
 
-    return (
-        checkCollisionBetweenTwoRects(offset2.x, offset2.y, offset2.w, offset2.h, wall.x, wall.y, wall.w,
-                    wall.h) &&
-        checkCollisionBetweenTwoRects(offset.x, offset.y, offset.w, offset.h, offset2.x, offset2.y,
-                offset2.w, offset2.h) &&
-        checkCollisionBetweenTwoRects(offset2.x, offset2.y, offset2.w, offset2.h, menu.x, menu.y, menu.w,
-                menu.h) &&
-        notCollidedWithProjectile
-    );
+    return (checkCollisionBetweenTwoRects(offset2.x, offset2.y, offset2.w, offset2.h, wall.x,
+                                          wall.y, wall.w, wall.h) &&
+            checkCollisionBetweenTwoRects(offset.x, offset.y, offset.w, offset.h, offset2.x,
+                                          offset2.y, offset2.w, offset2.h) &&
+            checkCollisionBetweenTwoRects(offset2.x, offset2.y, offset2.w, offset2.h, menu.x,
+                                          menu.y, menu.w, menu.h) &&
+            notCollidedWithProjectile);
 }
 
-int main(int argc, char *args[]) {
+int main(int argc, char* args[]) {
     SDL_Init(SDL_INIT_VIDEO);    // inicializa��o das fun��es de video
     SDL_Init(SDL_INIT_TIMER);    // inicializa��o das fun��es de tempo
-    SDL_Surface *screen;         // superficie de video
-    SDL_Surface *telaprincipal;  // supercie de fundo
-    SDL_Surface *bala;           // superficie da bala
-    SDL_Surface *explosao;       // superficie da explos�o
-    SDL_Surface *pontuacao;      // superficie dos numeros para pontua��o
+    SDL_Surface* screen;         // superficie de video
+    SDL_Surface* telaprincipal;  // supercie de fundo
+    SDL_Surface* bala;           // superficie da bala
+    SDL_Surface* explosao;       // superficie da explos�o
+    SDL_Surface* pontuacao;      // superficie dos numeros para pontua��o
 
     SpriteSet pontuacao01{"Pontuacao01"};
     Player player1{"Player1"};
@@ -171,7 +158,7 @@ int main(int argc, char *args[]) {
     std::vector<Projectile> projectiles{};
     size_t projectiles_counter = 0;
 
-    SDL_Rect wall;           // retangulo para determinar a colis�o com a parede central
+    SDL_Rect wall;  // retangulo para determinar a colis�o com a parede central
     SDL_Rect menu;  // retangulo para determinar a colis�o com a barra de informa��es inferior
     SDL_Rect offset3;      // coordenada da bala
     SDL_Rect pontuacao02;  // coordenada da pontua��o do jogador 1
@@ -234,8 +221,7 @@ int main(int argc, char *args[]) {
                     quit1 = 1;
                 }
             }
-        }
-        else if (entrar == 3)  // condi��o de entrada no menu
+        } else if (entrar == 3)  // condi��o de entrada no menu
         {
             SDL_FreeSurface(telaprincipal);
             telaprincipal = SDL_LoadBMP("resources/menu.bmp");  // troca a imagem bmp para o menu
@@ -265,8 +251,7 @@ int main(int argc, char *args[]) {
                     quit1 = 1;
                 }
             }
-        }
-        else if (entrar == 2)  // condicao 2 (o jogo em si)
+        } else if (entrar == 2)  // condicao 2 (o jogo em si)
         {
             // atribuicao de variaveis inteiras , retangulos , coordenadas e etc.
             pontuacao1 = 0;
@@ -281,8 +266,10 @@ int main(int argc, char *args[]) {
             pontuacao02.x = 212, pontuacao02.y = 435;
             pontuacao03.x = 550, pontuacao03.y = 435;
 
-            player1.position.x = 15, player1.position.y = 170, player1.position.w = 32, player1.position.h = 32;
-            player2.position.x = 560, player2.position.y = 260, player2.position.w = 32, player2.position.h = 32;
+            player1.position.x = 15, player1.position.y = 170, player1.position.w = 32,
+            player1.position.h = 32;
+            player2.position.x = 560, player2.position.y = 260, player2.position.w = 32,
+            player2.position.h = 32;
 
             wall.x = 287, wall.y = 102, wall.w = 53, wall.h = 240;
             menu.x = 1, menu.y = 413, menu.w = 638, menu.h = 66;
@@ -322,113 +309,97 @@ int main(int argc, char *args[]) {
                             switch (event.key.keysym.sym) {  // comandos para o jogador 1
                                 case SDLK_UP:                // tecla para cima
                                     if (player1.state == PlayerStateEnum::IDLE) {
-                                        if (checkCollisionPlayer1(player1.position, player2.position, wall, menu, projectiles)) {
+                                        if (checkCollisionPlayer1(player1.position,
+                                                                  player2.position, wall, menu,
+                                                                  projectiles)) {
                                             player1.position.y = player1.position.y - 6;
                                             player1.setDirection(DirectionEnum::UP);
                                             break;
-                                        } else {
-                                            pontuacao2 = pontuacao2 + 1;
-                                            player1.state = PlayerStateEnum::EXPLODING;
-                                            player1.timer = 1000;
                                         }
                                     }
                                     break;
                                 case SDLK_DOWN:  // tecla para baixo
                                     if (player1.state == PlayerStateEnum::IDLE) {
-                                        if (checkCollisionPlayer1(player1.position, player2.position, wall, menu, projectiles)) {
+                                        if (checkCollisionPlayer1(player1.position,
+                                                                  player2.position, wall, menu,
+                                                                  projectiles)) {
                                             // Update position and direction of player1
                                             player1.position.y = player1.position.y + 6;
                                             player1.setDirection(DirectionEnum::DOWN);
                                             break;
-                                        } else {
-                                            pontuacao2 = pontuacao2 + 1;
-                                            player1.state = PlayerStateEnum::EXPLODING;
-                                            player1.timer = 1000;
                                         }
                                     }
                                     break;
                                 case SDLK_RIGHT:  // tecla para a direita
                                     if (player1.state == PlayerStateEnum::IDLE) {
-                                        if (checkCollisionPlayer1(player1.position, player2.position, wall, menu, projectiles)) {
+                                        if (checkCollisionPlayer1(player1.position,
+                                                                  player2.position, wall, menu,
+                                                                  projectiles)) {
                                             // Update position and direction of player1
                                             player1.position.x = player1.position.x + 6;
                                             player1.setDirection(DirectionEnum::RIGHT);
                                             break;
-                                        } else {
-                                            pontuacao2 = pontuacao2 + 1;
-                                            player1.state = PlayerStateEnum::EXPLODING;
-                                            player1.timer = 1000;
                                         }
                                     }
                                     break;
                                 case SDLK_LEFT:  // tecla para esquerda
                                     if (player1.state == PlayerStateEnum::IDLE) {
-                                        if (checkCollisionPlayer1(player1.position, player2.position, wall, menu, projectiles)) {
+                                        if (checkCollisionPlayer1(player1.position,
+                                                                  player2.position, wall, menu,
+                                                                  projectiles)) {
                                             // Update position and direction of player1
                                             player1.position.x = player1.position.x - 6;
                                             player1.setDirection(DirectionEnum::LEFT);
                                             break;
-                                        } else {
-                                            pontuacao2 = pontuacao2 + 1;
-                                            player1.state = PlayerStateEnum::EXPLODING;
-                                            player1.timer = 1000;
                                         }
                                     }
                                     break;
                                 // comandos para o jogador 2
                                 case SDLK_w:  // tecla w ( para cima )
                                     if (player2.state == PlayerStateEnum::IDLE) {
-                                        if (checkCollisionPlayer2(player1.position, player2.position, wall, menu, projectiles)) {
+                                        if (checkCollisionPlayer2(player1.position,
+                                                                  player2.position, wall, menu,
+                                                                  projectiles)) {
                                             // Update position and direction of player2
                                             player2.position.y = player2.position.y - 6;
                                             player2.setDirection(DirectionEnum::UP);
                                             break;
-                                        } else {
-                                            pontuacao1 = pontuacao1 + 1;
-                                            player2.state = PlayerStateEnum::EXPLODING;
-                                            player2.timer = 1000;
                                         }
                                     }
                                     break;
                                 case SDLK_s:  // tecla s ( para baixo )
                                     if (player2.state == PlayerStateEnum::IDLE) {
-                                        if (checkCollisionPlayer2(player1.position, player2.position, wall, menu, projectiles)) {
+                                        if (checkCollisionPlayer2(player1.position,
+                                                                  player2.position, wall, menu,
+                                                                  projectiles)) {
                                             // Update position and direction of player2
                                             player2.position.y = player2.position.y + 6;
                                             player2.setDirection(DirectionEnum::DOWN);
                                             break;
-                                        } else {
-                                            pontuacao1 = pontuacao1 + 1;
-                                            player2.state = PlayerStateEnum::EXPLODING;
-                                            player2.timer = 1000;
                                         }
                                     }
                                     break;
                                 case SDLK_d:  // tecla d ( para direita )
                                     if (player2.state == PlayerStateEnum::IDLE) {
-                                        if (checkCollisionPlayer2(player1.position, player2.position, wall, menu, projectiles)) {
+                                        if (checkCollisionPlayer2(player1.position,
+                                                                  player2.position, wall, menu,
+                                                                  projectiles)) {
                                             // Update position and direction of player2
                                             player2.position.x = player2.position.x + 6;
                                             player2.setDirection(DirectionEnum::RIGHT);
                                             break;
-                                        } else {
-                                            pontuacao1 = pontuacao1 + 1;
-                                            player2.state = PlayerStateEnum::EXPLODING;
-                                            player2.timer = 1000;
                                         }
                                     }
                                     break;
                                 case SDLK_a:  // tecla a ( para esquerda )
                                     if (player2.state == PlayerStateEnum::IDLE) {
-                                        if (checkCollisionPlayer2(player1.position, player2.position, wall, menu, projectiles)) {
+                                        if (checkCollisionPlayer2(player1.position,
+                                                                  player2.position, wall, menu,
+                                                                  projectiles)) {
                                             // Update position and direction of player2
                                             player2.position.x = player2.position.x - 6;
                                             player2.setDirection(DirectionEnum::LEFT);
                                             break;
-                                        } else {
-                                            pontuacao1 = pontuacao1 + 1;
-                                            player2.state = PlayerStateEnum::EXPLODING;
-                                            player2.timer = 1000;
                                         }
                                     }
                                     break;
@@ -437,107 +408,88 @@ int main(int argc, char *args[]) {
                                     break;
                                 // comandos para o tiro dos jogadores 1 e 2
                                 case SDLK_m:  // tecla m para o tiro do jogador 1
-                                    {
-                                        Projectile projectile = Projectile(projectiles_counter);
-                                        projectile.loadSprite("resources/bala.bmp");
+                                {
+                                    Projectile projectile = Projectile(projectiles_counter);
+                                    projectile.loadSprite("resources/bala.bmp");
 
-                                        switch (player1.direction) {
-                                            case static_cast<int>(DirectionEnum::UP):
-                                                {
-                                                    projectile.position.x = player1.position.x + 12;
-                                                    projectile.position.y = player1.position.y - 15;
-                                                    projectile.position.w = 12;
-                                                    projectile.position.h = 12;
-                                                    projectile.setDirection(DirectionEnum::UP);
-                                                }
-                                                break;
-                                            case static_cast<int>(DirectionEnum::DOWN):
-                                                {
-                                                    projectile.position.x = player1.position.x + 12;
-                                                    projectile.position.y = player1.position.y + 36;
-                                                    projectile.position.w = 12;
-                                                    projectile.position.h = 12;
-                                                    projectile.setDirection(DirectionEnum::DOWN);
-                                                }
-                                                break;
-                                            case static_cast<int>(DirectionEnum::RIGHT):
-                                                {
-                                                    projectile.position.x = player1.position.x + 36;
-                                                    projectile.position.y = player1.position.y + 12;
-                                                    projectile.position.w = 12;
-                                                    projectile.position.h = 12;
-                                                    projectile.setDirection(DirectionEnum::RIGHT);
-                                                }
-                                                break;
-                                            case static_cast<int>(DirectionEnum::LEFT):
-                                                {
-                                                    projectile.position.x = player1.position.x - 15;
-                                                    projectile.position.y = player1.position.y + 12;
-                                                    projectile.position.w = 12;
-                                                    projectile.position.h = 12;
-                                                    projectile.setDirection(DirectionEnum::LEFT);
-                                                }
-                                                break;
-                                                
-                                            default:
-                                                break;
-                                        }
-                                        projectile.movingCooldown = PROJECTILE_MOVING_COOLDOWN;
-                                        projectiles.push_back(projectile);
-                                        projectiles_counter++;
+                                    switch (player1.direction) {
+                                        case static_cast<int>(DirectionEnum::UP): {
+                                            projectile.position.x = player1.position.x + 12;
+                                            projectile.position.y = player1.position.y - 15;
+                                            projectile.position.w = 12;
+                                            projectile.position.h = 12;
+                                            projectile.setDirection(DirectionEnum::UP);
+                                        } break;
+                                        case static_cast<int>(DirectionEnum::DOWN): {
+                                            projectile.position.x = player1.position.x + 12;
+                                            projectile.position.y = player1.position.y + 36;
+                                            projectile.position.w = 12;
+                                            projectile.position.h = 12;
+                                            projectile.setDirection(DirectionEnum::DOWN);
+                                        } break;
+                                        case static_cast<int>(DirectionEnum::RIGHT): {
+                                            projectile.position.x = player1.position.x + 36;
+                                            projectile.position.y = player1.position.y + 12;
+                                            projectile.position.w = 12;
+                                            projectile.position.h = 12;
+                                            projectile.setDirection(DirectionEnum::RIGHT);
+                                        } break;
+                                        case static_cast<int>(DirectionEnum::LEFT): {
+                                            projectile.position.x = player1.position.x - 15;
+                                            projectile.position.y = player1.position.y + 12;
+                                            projectile.position.w = 12;
+                                            projectile.position.h = 12;
+                                            projectile.setDirection(DirectionEnum::LEFT);
+                                        } break;
+
+                                        default:
+                                            break;
                                     }
-                                    break;
+                                    projectile.movingCooldown = PROJECTILE_MOVING_COOLDOWN;
+                                    projectiles.push_back(projectile);
+                                    projectiles_counter++;
+                                } break;
                                 case SDLK_f:  // tecla f para o jogador 2
-                                    {
-                                        Projectile projectile = Projectile(projectiles_counter);
-                                        projectile.loadSprite("resources/bala.bmp");
+                                {
+                                    Projectile projectile = Projectile(projectiles_counter);
+                                    projectile.loadSprite("resources/bala.bmp");
 
-                                        switch (player2.direction) {
-                                            case static_cast<int>(DirectionEnum::UP):
-                                                {
-                                                    projectile.position.x = player2.position.x + 12;
-                                                    projectile.position.y = player2.position.y - 15;
-                                                    projectile.position.w = 12;
-                                                    projectile.position.h = 12;
-                                                    projectile.setDirection(DirectionEnum::UP);
-                                                }
-                                                break;
-                                            case static_cast<int>(DirectionEnum::DOWN):
-                                                {
-                                                    projectile.position.x = player2.position.x + 12;
-                                                    projectile.position.y = player2.position.y + 36;
-                                                    projectile.position.w = 12;
-                                                    projectile.position.h = 12;
-                                                    projectile.setDirection(DirectionEnum::DOWN);
-                                                }
-                                                break;
-                                            case static_cast<int>(DirectionEnum::RIGHT):
-                                                {
-                                                    projectile.position.x = player2.position.x + 36;
-                                                    projectile.position.y = player2.position.y + 12;
-                                                    projectile.position.w = 12;
-                                                    projectile.position.h = 12;
-                                                    projectile.setDirection(DirectionEnum::RIGHT);
-                                                }
-                                                break;
-                                            case static_cast<int>(DirectionEnum::LEFT):
-                                                {
-                                                    projectile.position.x = player2.position.x - 15;
-                                                    projectile.position.y = player2.position.y + 12;
-                                                    projectile.position.w = 12;
-                                                    projectile.position.h = 12;
-                                                    projectile.setDirection(DirectionEnum::LEFT);
-                                                }
-                                                break;
-                                            default:
-                                                break;
-                                            
-                                        }
-                                        projectile.movingCooldown = PROJECTILE_MOVING_COOLDOWN;
-                                        projectiles.push_back(projectile);
-                                        projectiles_counter++;
+                                    switch (player2.direction) {
+                                        case static_cast<int>(DirectionEnum::UP): {
+                                            projectile.position.x = player2.position.x + 12;
+                                            projectile.position.y = player2.position.y - 15;
+                                            projectile.position.w = 12;
+                                            projectile.position.h = 12;
+                                            projectile.setDirection(DirectionEnum::UP);
+                                        } break;
+                                        case static_cast<int>(DirectionEnum::DOWN): {
+                                            projectile.position.x = player2.position.x + 12;
+                                            projectile.position.y = player2.position.y + 36;
+                                            projectile.position.w = 12;
+                                            projectile.position.h = 12;
+                                            projectile.setDirection(DirectionEnum::DOWN);
+                                        } break;
+                                        case static_cast<int>(DirectionEnum::RIGHT): {
+                                            projectile.position.x = player2.position.x + 36;
+                                            projectile.position.y = player2.position.y + 12;
+                                            projectile.position.w = 12;
+                                            projectile.position.h = 12;
+                                            projectile.setDirection(DirectionEnum::RIGHT);
+                                        } break;
+                                        case static_cast<int>(DirectionEnum::LEFT): {
+                                            projectile.position.x = player2.position.x - 15;
+                                            projectile.position.y = player2.position.y + 12;
+                                            projectile.position.w = 12;
+                                            projectile.position.h = 12;
+                                            projectile.setDirection(DirectionEnum::LEFT);
+                                        } break;
+                                        default:
+                                            break;
                                     }
-                                    break;
+                                    projectile.movingCooldown = PROJECTILE_MOVING_COOLDOWN;
+                                    projectiles.push_back(projectile);
+                                    projectiles_counter++;
+                                } break;
                                 default:
                                     x = 0;
                             }
@@ -555,20 +507,17 @@ int main(int argc, char *args[]) {
                     }
                 }
 
-
-                if (
-                    player1.state != PlayerStateEnum::EXPLODING &&
-                    !checkCollisionPlayer1(player1.position, player2.position, wall, menu, projectiles)
-                ) {
+                if (player1.state != PlayerStateEnum::EXPLODING &&
+                    !checkCollisionPlayer1(player1.position, player2.position, wall, menu,
+                                           projectiles)) {
                     pontuacao2 = pontuacao2 + 1;
                     player1.state = PlayerStateEnum::EXPLODING;
                     player1.timer = 1000;
                 }
-                
-                if (
-                    player2.state != PlayerStateEnum::EXPLODING &&
-                    !checkCollisionPlayer2(player1.position, player2.position, wall, menu, projectiles)
-                ) {
+
+                if (player2.state != PlayerStateEnum::EXPLODING &&
+                    !checkCollisionPlayer2(player1.position, player2.position, wall, menu,
+                                           projectiles)) {
                     pontuacao1 = pontuacao1 + 1;
                     player2.state = PlayerStateEnum::EXPLODING;
                     player2.timer = 1000;
@@ -581,36 +530,33 @@ int main(int argc, char *args[]) {
 
                 // Fill the screen surface with the clear color
                 SDL_FillRect(screen, NULL, clearColor);
-                
-                SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
-                
-                jogador_load(player1.direction, player1.position, player1.spriteSurface, player1.spriteSet,
-                                screen);
 
-                switch (player1.state)
-                {
-                case PlayerStateEnum::EXPLODING:
-                    if (player1.timer > 0) {
-                        SDL_BlitSurface(explosao, NULL, screen, &player1.position);
-                        player1.timer--;
-                    } else {
-                        player1.state = PlayerStateEnum::IDLE;
-                        player1.position.x = 15, player1.position.y = 170;
-                    }
-                    
-                    break;
-                
-                default:
-                    break;
+                SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
+
+                jogador_load(player1.direction, player1.position, player1.spriteSurface,
+                             player1.spriteSet, screen);
+
+                switch (player1.state) {
+                    case PlayerStateEnum::EXPLODING:
+                        if (player1.timer > 0) {
+                            SDL_BlitSurface(explosao, NULL, screen, &player1.position);
+                            player1.timer--;
+                        } else {
+                            player1.state = PlayerStateEnum::IDLE;
+                            player1.position.x = 15, player1.position.y = 170;
+                        }
+
+                        break;
+
+                    default:
+                        break;
                 }
 
-                jogador_load(player2.direction, player2.position, player2.spriteSurface, player2.spriteSet,
-                                screen);
+                jogador_load(player2.direction, player2.position, player2.spriteSurface,
+                             player2.spriteSet, screen);
 
-                switch (player2.state)
-                {
-                case PlayerStateEnum::EXPLODING:
-                    {
+                switch (player2.state) {
+                    case PlayerStateEnum::EXPLODING: {
                         if (player2.timer > 0) {
                             SDL_BlitSurface(explosao, NULL, screen, &player2.position);
                             player2.timer--;
@@ -618,59 +564,48 @@ int main(int argc, char *args[]) {
                             player2.state = PlayerStateEnum::IDLE;
                             player2.position.x = 560, player2.position.y = 260;
                         }
-                    }
-                    break;
-                
-                default:
-                    break;
+                    } break;
+
+                    default:
+                        break;
                 }
 
-                for (auto projectile = projectiles.begin(); projectile != projectiles.end(); ) {
+                for (auto projectile = projectiles.begin(); projectile != projectiles.end();) {
                     SDL_Rect blitPosition = projectile->position;
                     SDL_BlitSurface(projectile->spriteSurface, NULL, screen, &blitPosition);
-                    
+
                     if (projectile->movingCooldown > 0) {
                         projectile->movingCooldown--;
                     } else {
-                        switch (projectile->direction)
-                        {
-                        case static_cast<int>(DirectionEnum::UP):
-                            {
+                        switch (projectile->direction) {
+                            case static_cast<int>(DirectionEnum::UP): {
                                 projectile->position.y--;
                                 projectile->movingCooldown = PROJECTILE_MOVING_COOLDOWN;
-                            }
-                            break;
-                        case static_cast<int>(DirectionEnum::DOWN):
-                            {
+                            } break;
+                            case static_cast<int>(DirectionEnum::DOWN): {
                                 projectile->position.y++;
                                 projectile->movingCooldown = PROJECTILE_MOVING_COOLDOWN;
-                            }
-                            break;
-                        case static_cast<int>(DirectionEnum::RIGHT):
-                            {
+                            } break;
+                            case static_cast<int>(DirectionEnum::RIGHT): {
                                 projectile->position.x++;
                                 projectile->movingCooldown = PROJECTILE_MOVING_COOLDOWN;
-                            }
-                            break;
-                        case static_cast<int>(DirectionEnum::LEFT):
-                            {
+                            } break;
+                            case static_cast<int>(DirectionEnum::LEFT): {
                                 projectile->position.x--;
                                 projectile->movingCooldown = PROJECTILE_MOVING_COOLDOWN;
-                            }
-                            break;
+                            } break;
 
-                        default:
-                            break;
+                            default:
+                                break;
                         }
                     }
-                    if (
-                        projectile->position.x < -10 || projectile->position.x > 1000 ||
-                        projectile->position.y < -10 || projectile->position.y > 1000
-                    ) {
+                    if (projectile->position.x < -10 || projectile->position.x > 1000 ||
+                        projectile->position.y < -10 || projectile->position.y > 1000) {
                         std::cout << "Before erase projectile" << std::endl;
-                        projectile = projectiles.erase(projectile);    // erase returns the next valid iterator
+                        projectile =
+                            projectiles.erase(projectile);  // erase returns the next valid iterator
                     } else {
-                        ++projectile; // Only increment if no deletion occurred
+                        ++projectile;  // Only increment if no deletion occurred
                     }
                 }
 
@@ -679,11 +614,8 @@ int main(int argc, char *args[]) {
 
                 std::cout << "The length of the vector is: " << length << std::endl;
 
-
-                pontuacao_load(pontuacao2, pontuacao03, pontuacao,
-                                pontuacao01, screen);
-                pontuacao_load(pontuacao1, pontuacao02, pontuacao,
-                                pontuacao01, screen);
+                pontuacao_load(pontuacao2, pontuacao03, pontuacao, pontuacao01, screen);
+                pontuacao_load(pontuacao1, pontuacao02, pontuacao, pontuacao01, screen);
                 SDL_Flip(screen);
 
                 // condi��es para verificar a vitoria dos jogadores
@@ -740,8 +672,7 @@ int main(int argc, char *args[]) {
                     }
                 }
             }
-        }
-        else {
+        } else {
             entrar = 1;
         }
     }

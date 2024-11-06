@@ -2,8 +2,8 @@
 #ifndef SPRITESET_H
 #define SPRITESET_H
 
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 
 #ifdef __APPLE__
 #include <SDL/SDL.h>
@@ -12,7 +12,7 @@
 #endif
 
 class SpriteSet {
-public:
+   public:
     // Constructor
     SpriteSet(const std::string& name);
 
@@ -31,9 +31,9 @@ public:
     // Get the name of the sprite set
     const std::string& getName() const;
 
-private:
+   private:
     std::string name_;
     std::unordered_map<std::string, SDL_Rect> rects_;
 };
 
-#endif // SPRITESET_H
+#endif  // SPRITESET_H
