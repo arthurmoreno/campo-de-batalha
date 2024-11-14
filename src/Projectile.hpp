@@ -2,10 +2,14 @@
 #ifndef PROJECTILE_H
 #define PROJECTILE_H
 
-#ifdef __APPLE__
-#include <SDL/SDL.h>
+#if defined(__APPLE__)
+    #include <SDL/SDL.h>
+#elif defined(_WIN32) || defined(_WIN64)
+    #include <SDL.h>
+#elif defined(__linux__)
+    #include <SDL/SDL.h>
 #else
-#include <SDL.h>
+    #include <SDL.h>
 #endif
 
 #include "Constants.hpp"

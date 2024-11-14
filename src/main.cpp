@@ -1,16 +1,20 @@
 #include <stdlib.h>
-#include <windows.h>
-#include <winsock2.h>
 
 #include <iostream>
 #include <vector>
 
 #define SDL_MAIN_HANDLED  // Add this line
 
-#ifdef __APPLE__
-#include <SDL/SDL.h>
+#if defined(__APPLE__)
+    #include <SDL/SDL.h>
+#elif defined(_WIN32) || defined(_WIN64)
+    #include <windows.h>
+    #include <winsock2.h>
+    #include <SDL.h>
+#elif defined(__linux__)
+    #include <SDL/SDL.h>
 #else
-#include <SDL.h>
+    #include <SDL.h>
 #endif
 
 #include "Constants.hpp"

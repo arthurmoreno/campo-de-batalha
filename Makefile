@@ -3,13 +3,16 @@
 # ==============================
 
 # Project name
-PROJECT := campo_de_batalha.exe
+PROJECT := campo_de_batalha
 
 # Build directory
 BUILD_DIR := build
 
-# CMake generator
-CMAKE_GENERATOR := "MinGW Makefiles"
+# CMake generator for Windows
+CMAKE_GENERATOR_WIN := "MinGW Makefiles"
+
+# CMake generator for Linux (usually not needed)
+CMAKE_GENERATOR_LINUX :=
 
 # CMake executable
 CMAKE := cmake
@@ -21,27 +24,33 @@ MAKE_CMD := make
 #           RULES
 # ==============================
 
-.PHONY: all build clean
+.PHONY: all build build-linux clean format
 
 # Default target
 all: build
 
-# Build target
-build:
-	@echo "Starting build process..."
-	@mkdir $(BUILD_DIR) 2> NUL || echo "Build directory already exists."
-	@cd $(BUILD_DIR) && $(CMAKE) -G $(CMAKE_GENERATOR) .. && $(MAKE_CMD) --always-make
+# Build target for Windows
+build-win:
+	@echo "Starting build process on Windows..."
+	@if not exist $(BUILD_DIR) mkdir $(BUILD_DIR)
+	@cd $(BUILD_DIR) && $(CMAKE) -G $(CMAKE_GENERATOR_WIN) .. && $(MAKE_CMD) --always-make
+
+# Build target for Linux
+build-linux:
+	@echo "Starting build process on Linux..."
+	@mkdir -p $(BUILD_DIR)
+	@cd $(BUILD_DIR) && $(CMAKE) $(CMAKE_GENERATOR_LINUX) .. && $(MAKE_CMD)
 
 # Clean target
 clean:
 	@echo "Cleaning project..."
-	@rmdir /s /q $(BUILD_DIR) 2> NUL || echo "Build directory does not exist."
-	@if exist $(PROJECT) del /f /q $(PROJECT)
+	@$(RM) -r $(BUILD_DIR)
+	@$(RM) $(PROJECT) $(PROJECT).exe
 
 # Format target for Windows
 format:
 	@echo "Formatting source files..."
-	@for /r %%f in (src\*.cpp src\*.hpp) do clang-format -i "%%f"
+	@for file in $(wildcard src/*.[ch]pp); do clang-format -i "$$file"; done
 
 # Phony Targets
-.PHONY: all build clean format
+.PHONY: all build build-linux clean format
