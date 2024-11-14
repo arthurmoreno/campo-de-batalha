@@ -6,15 +6,15 @@
 #define SDL_MAIN_HANDLED  // Add this line
 
 #if defined(__APPLE__)
-    #include <SDL/SDL.h>
+#include <SDL/SDL.h>
 #elif defined(_WIN32) || defined(_WIN64)
-    #include <windows.h>
-    #include <winsock2.h>
-    #include <SDL.h>
+#include <SDL.h>
+#include <windows.h>
+#include <winsock2.h>
 #elif defined(__linux__)
-    #include <SDL/SDL.h>
+#include <SDL/SDL.h>
 #else
-    #include <SDL.h>
+#include <SDL.h>
 #endif
 
 #include "Constants.hpp"
@@ -157,43 +157,45 @@ int main(int argc, char* args[]) {
     entrar = 1;
     SDL_EnableKeyRepeat(50, 50);  // habilitar a repeti��o de teclas
 
+    player1.loadSprite("resources/jogador1.bmp");
+    player2.loadSprite("resources/jogador2.bmp");
+
+    bala = SDL_LoadBMP("resources/bala.bmp");
+    // jogador1 = SDL_LoadBMP("resources/jogador1.bmp");
+    SDL_SetColorKey(
+        bala, SDL_SRCCOLORKEY | SDL_RLEACCEL,
+        (Uint16)SDL_MapRGB(bala->format, 0, 255, 0));  // para por transparencia no verde.
+
+    explosao = SDL_LoadBMP("resources/explosao.bmp");
+    SDL_SetColorKey(explosao, SDL_SRCCOLORKEY | SDL_RLEACCEL,
+                    (Uint16)SDL_MapRGB(explosao->format, 0, 255,
+                                       0));  // para por transparencia no verde.
+    pontuacao = SDL_LoadBMP("resources/numeros.bmp");
+    SDL_SetColorKey(pontuacao, SDL_SRCCOLORKEY | SDL_RLEACCEL,
+                    (Uint16)SDL_MapRGB(pontuacao->format, 0, 255,
+                                       0));  // para por transparencia no verde.
+
+    screen =
+        SDL_SetVideoMode(640, 480, 32, SDL_SWSURFACE);  // atribui��o de uma superficie de video
+                                                        // 640 x 480 para a variavel screen
+
     while (quit1 == 0)  // loop principal
     {
-        screen =
-            SDL_SetVideoMode(640, 480, 32, SDL_SWSURFACE);  // atribui��o de uma superficie de video
-                                                            // 640 x 480 para a variavel screen
-
         if (entrar == 1)  // condi��o 1 (para tela inicial)
         {
+            SDL_FreeSurface(telaprincipal);
             // atribui��o de imagens bmp para as superficies do jogo
             telaprincipal = SDL_LoadBMP("resources/telainicial.bmp");
-            // jogador1 = SDL_LoadBMP("resources/jogador1.bmp");
-            player1.loadSprite("resources/jogador1.bmp");
-            player2.loadSprite("resources/jogador2.bmp");
-
-            bala = SDL_LoadBMP("resources/bala.bmp");
-            SDL_SetColorKey(
-                bala, SDL_SRCCOLORKEY | SDL_RLEACCEL,
-                (Uint16)SDL_MapRGB(bala->format, 0, 255, 0));  // para por transparencia no verde.
-
-            explosao = SDL_LoadBMP("resources/explosao.bmp");
-            SDL_SetColorKey(explosao, SDL_SRCCOLORKEY | SDL_RLEACCEL,
-                            (Uint16)SDL_MapRGB(explosao->format, 0, 255,
-                                               0));  // para por transparencia no verde.
-            pontuacao = SDL_LoadBMP("resources/numeros.bmp");
-            SDL_SetColorKey(pontuacao, SDL_SRCCOLORKEY | SDL_RLEACCEL,
-                            (Uint16)SDL_MapRGB(pontuacao->format, 0, 255,
-                                               0));              // para por transparencia no verde.
             SDL_BlitSurface(telaprincipal, NULL, screen, NULL);  // carrega a telaprincipal no video
-            SDL_Flip(screen);
 
-            if (SDL_PollEvent(&event))  // condi��o de entrada (enter)
+            while (SDL_PollEvent(&event))  // condi��o de entrada (enter)
             {
                 if (event.type == SDL_KEYDOWN) {
                     switch (event.key.keysym.sym) {
                         case SDLK_RETURN:
                             quit2 = 0;
                             entrar = 3;
+                            break;
                         default:
                             x = 1;
                     }
@@ -203,6 +205,8 @@ int main(int argc, char* args[]) {
                     quit1 = 1;
                 }
             }
+            SDL_Flip(screen);
+            SDL_Delay(16);
         } else if (entrar == 3)  // condi��o de entrada no menu
         {
             SDL_FreeSurface(telaprincipal);
@@ -482,16 +486,14 @@ int main(int argc, char* args[]) {
                 }
 
                 if (player1.state != PlayerStateEnum::EXPLODING &&
-                    !checkCollision(player1.position, player2.position, wall, menu,
-                                           projectiles)) {
+                    !checkCollision(player1.position, player2.position, wall, menu, projectiles)) {
                     pontuacao2 = pontuacao2 + 1;
                     player1.state = PlayerStateEnum::EXPLODING;
                     player1.timer = 1000;
                 }
 
                 if (player2.state != PlayerStateEnum::EXPLODING &&
-                    !checkCollision(player2.position, player1.position, wall, menu,
-                                           projectiles)) {
+                    !checkCollision(player2.position, player1.position, wall, menu, projectiles)) {
                     pontuacao1 = pontuacao1 + 1;
                     player2.state = PlayerStateEnum::EXPLODING;
                     player2.timer = 1000;

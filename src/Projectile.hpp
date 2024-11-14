@@ -3,13 +3,13 @@
 #define PROJECTILE_H
 
 #if defined(__APPLE__)
-    #include <SDL/SDL.h>
+#include <SDL/SDL.h>
 #elif defined(_WIN32) || defined(_WIN64)
-    #include <SDL.h>
+#include <SDL.h>
 #elif defined(__linux__)
-    #include <SDL/SDL.h>
+#include <SDL/SDL.h>
 #else
-    #include <SDL.h>
+#include <SDL.h>
 #endif
 
 #include "Constants.hpp"
