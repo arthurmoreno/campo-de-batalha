@@ -3,13 +3,13 @@
 #define PLAYER_H
 
 #if defined(__APPLE__)
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 #elif defined(_WIN32) || defined(_WIN64)
 #include <SDL.h>
 #elif defined(__linux__)
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 #else
-#include <SDL.h>
+#include <SDL2/SDL.h>
 #endif
 
 #include "Constants.hpp"
@@ -20,6 +20,7 @@ class Player {
     std::string playerName;
     SpriteSet spriteSet;
     SDL_Surface* spriteSurface;
+    SDL_Texture *spriteTexture;
 
     int direction;
     SDL_Rect position;
@@ -43,11 +44,17 @@ class Player {
                           32);  // Virado para esquerda
     };
 
-    void loadSprite(const std::string& spriteFileName) {
+    ~Player() {
+        SDL_DestroyTexture(spriteTexture);
+    }
+
+    void loadSprite(const std::string& spriteFileName, SDL_Renderer *renderer) {
         spriteSurface = SDL_LoadBMP(spriteFileName.c_str());
-        SDL_SetColorKey(spriteSurface, SDL_SRCCOLORKEY | SDL_RLEACCEL,
-                        (Uint16)SDL_MapRGB(spriteSurface->format, 0, 255,
-                                           0));  // para por transparencia no verde.
+        SDL_SetColorKey(
+            spriteSurface, SDL_TRUE,
+            SDL_MapRGB(spriteSurface->format, 0, 255, 0));
+        spriteTexture = SDL_CreateTextureFromSurface(renderer, spriteSurface);
+        SDL_FreeSurface(spriteSurface);
     };
 
     void setDirection(DirectionEnum directionEnum) { direction = static_cast<int>(directionEnum); }

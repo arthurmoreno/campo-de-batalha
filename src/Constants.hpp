@@ -3,6 +3,9 @@
 
 #include <string>
 
+const int FPS = 60;
+const int FRAME_DELAY = 1000 / FPS;
+
 enum struct DirectionEnum { UP = 0, DOWN = 1, RIGHT = 2, LEFT = 3 };
 
 enum struct PlayerStateEnum { IDLE = 0, MOVING = 1, FIRING = 2, EXPLODING = 3 };
@@ -23,10 +26,14 @@ inline std::string directionToString(DirectionEnum dir) {
     }
 }
 
-const int PROJECTILE_MOVING_COOLDOWN = 5;
+const int PROJECTILE_MOVING_COOLDOWN = 0;
 
-const int PLAYER_MOVING_TIMER = 50;
+const int PROJECTILE_MOVING_UNITS = 6;
 
-const int PLAYER_FIRING_TIMER = 100;
+const int PLAYER_EXPLODING_TIMER = 25;
+
+const int PLAYER_MOVING_TIMER = 1;
+
+const int PLAYER_FIRING_TIMER = 5;
 
 #endif  // CONSTANTS_H

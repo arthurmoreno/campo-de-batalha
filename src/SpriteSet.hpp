@@ -6,13 +6,13 @@
 #include <unordered_map>
 
 #if defined(__APPLE__)
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 #elif defined(_WIN32) || defined(_WIN64)
-#include <SDL.h>
+#include <SDL2/SDL.h>
 #elif defined(__linux__)
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 #else
-#include <SDL.h>
+#include <SDL2/SDL.h>
 #endif
 
 class SpriteSet {
