@@ -52,6 +52,46 @@ class Player {
 
     void setDirection(DirectionEnum directionEnum) { direction = static_cast<int>(directionEnum); }
 
+    void tryWalkUp() {
+        if (this->state == PlayerStateEnum::IDLE) {
+            this->position.y = this->position.y - 6;
+            this->setDirection(DirectionEnum::UP);
+
+            this->state = PlayerStateEnum::MOVING;
+            this->timer = PLAYER_MOVING_TIMER;
+        }
+    }
+
+    void tryWalkDown() {
+        if (this->state == PlayerStateEnum::IDLE) {
+            this->position.y = this->position.y + 6;
+            this->setDirection(DirectionEnum::DOWN);
+
+            this->state = PlayerStateEnum::MOVING;
+            this->timer = PLAYER_MOVING_TIMER;
+        }
+    }
+
+    void tryWalkRight() {
+        if (this->state == PlayerStateEnum::IDLE) {
+            this->position.x = this->position.x + 6;
+            this->setDirection(DirectionEnum::RIGHT);
+
+            this->state = PlayerStateEnum::MOVING;
+            this->timer = PLAYER_MOVING_TIMER;
+        }
+    }
+
+    void tryWalkLeft() {
+        if (this->state == PlayerStateEnum::IDLE) {
+            this->position.x = this->position.x - 6;
+            this->setDirection(DirectionEnum::LEFT);
+
+            this->state = PlayerStateEnum::MOVING;
+            this->timer = PLAYER_MOVING_TIMER;
+        }
+    }
+
    private:
 };
 

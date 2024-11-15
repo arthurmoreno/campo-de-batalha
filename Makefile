@@ -40,6 +40,7 @@ build-linux:
 	@echo "Starting build process on Linux..."
 	@mkdir -p $(BUILD_DIR)
 	@cd $(BUILD_DIR) && $(CMAKE) $(CMAKE_GENERATOR_LINUX) .. && $(MAKE_CMD)
+	@mv $(BUILD_DIR)/$(PROJECT) .
 
 # Clean target
 clean:

@@ -23,6 +23,10 @@ inline std::string directionToString(DirectionEnum dir) {
     }
 }
 
-const int PROJECTILE_MOVING_COOLDOWN = 20;
+const int PROJECTILE_MOVING_COOLDOWN = 5;
+
+const int PLAYER_MOVING_TIMER = 50;
+
+const int PLAYER_FIRING_TIMER = 100;
 
 #endif  // CONSTANTS_H
