@@ -442,44 +442,6 @@ int main(int argc, char* args[]) {
                                 case SDLK_f:  // tecla f para o jogador 2
                                 {
                                     addKeyIfNotPressed(pressedKeysPlayer2, SDLK_f);
-                                    // Projectile projectile = Projectile(projectiles_counter);
-                                    // projectile.loadSprite("resources/bala.bmp");
-
-                                    // switch (player2.direction) {
-                                    //     case static_cast<int>(DirectionEnum::UP): {
-                                    //         projectile.position.x = player2.position.x + 12;
-                                    //         projectile.position.y = player2.position.y - 20;
-                                    //         projectile.position.w = 12;
-                                    //         projectile.position.h = 12;
-                                    //         projectile.setDirection(DirectionEnum::UP);
-                                    //     } break;
-                                    //     case static_cast<int>(DirectionEnum::DOWN): {
-                                    //         projectile.position.x = player2.position.x + 12;
-                                    //         projectile.position.y = player2.position.y + 40;
-                                    //         projectile.position.w = 12;
-                                    //         projectile.position.h = 12;
-                                    //         projectile.setDirection(DirectionEnum::DOWN);
-                                    //     } break;
-                                    //     case static_cast<int>(DirectionEnum::RIGHT): {
-                                    //         projectile.position.x = player2.position.x + 40;
-                                    //         projectile.position.y = player2.position.y + 12;
-                                    //         projectile.position.w = 12;
-                                    //         projectile.position.h = 12;
-                                    //         projectile.setDirection(DirectionEnum::RIGHT);
-                                    //     } break;
-                                    //     case static_cast<int>(DirectionEnum::LEFT): {
-                                    //         projectile.position.x = player2.position.x - 20;
-                                    //         projectile.position.y = player2.position.y + 12;
-                                    //         projectile.position.w = 12;
-                                    //         projectile.position.h = 12;
-                                    //         projectile.setDirection(DirectionEnum::LEFT);
-                                    //     } break;
-                                    //     default:
-                                    //         break;
-                                    // }
-                                    // projectile.movingCooldown = PROJECTILE_MOVING_COOLDOWN;
-                                    // projectiles.push_back(projectile);
-                                    // projectiles_counter++;
                                 } break;
                                 default:
                                     x = 0;
