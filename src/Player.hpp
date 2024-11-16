@@ -25,14 +25,21 @@ class Player {
     int direction;
     SDL_Rect position;
 
-    int timer;
-    PlayerStateEnum state;
+    int movingCooldown;
+    PlayerStateEnum movingState;
+
+    int firingCooldown;
+    PlayerStateEnum firingState;
+
+    int explodingTimer;
+    PlayerStateEnum explodingState;
 
     Player(const std::string& playerName)
         : playerName(playerName),
           spriteSet("Jogador1")  // Initialize spriteSet here
     {
-        state = PlayerStateEnum::IDLE;
+        resetStates();
+
         direction = static_cast<int>(DirectionEnum::RIGHT);
         spriteSet.addRect(directionToString(DirectionEnum::RIGHT), 0, 0, 32,
                           32);  // Virado para direita
@@ -48,6 +55,12 @@ class Player {
         SDL_DestroyTexture(spriteTexture);
     }
 
+    void resetStates() {
+        movingState = PlayerStateEnum::IDLE;
+        firingState = PlayerStateEnum::IDLE;
+        explodingState = PlayerStateEnum::STABLE;
+    }
+
     void loadSprite(const std::string& spriteFileName, SDL_Renderer *renderer) {
         spriteSurface = SDL_LoadBMP(spriteFileName.c_str());
         SDL_SetColorKey(
@@ -60,43 +73,80 @@ class Player {
     void setDirection(DirectionEnum directionEnum) { direction = static_cast<int>(directionEnum); }
 
     void tryWalkUp() {
-        if (this->state == PlayerStateEnum::IDLE) {
-            this->position.y = this->position.y - 6;
+        if (this->movingState == PlayerStateEnum::IDLE) {
+            this->position.y = this->position.y - PLAYER_MOVING_UNITS;
             this->setDirection(DirectionEnum::UP);
 
-            this->state = PlayerStateEnum::MOVING;
-            this->timer = PLAYER_MOVING_TIMER;
+            this->movingState = PlayerStateEnum::MOVING;
+            this->movingCooldown = PLAYER_MOVING_TIMER;
         }
     }
 
     void tryWalkDown() {
-        if (this->state == PlayerStateEnum::IDLE) {
-            this->position.y = this->position.y + 6;
+        if (this->movingState == PlayerStateEnum::IDLE) {
+            this->position.y = this->position.y + PLAYER_MOVING_UNITS;
             this->setDirection(DirectionEnum::DOWN);
 
-            this->state = PlayerStateEnum::MOVING;
-            this->timer = PLAYER_MOVING_TIMER;
+            this->movingState = PlayerStateEnum::MOVING;
+            this->movingCooldown = PLAYER_MOVING_TIMER;
         }
     }
 
     void tryWalkRight() {
-        if (this->state == PlayerStateEnum::IDLE) {
-            this->position.x = this->position.x + 6;
+        if (this->movingState == PlayerStateEnum::IDLE) {
+            this->position.x = this->position.x + PLAYER_MOVING_UNITS;
             this->setDirection(DirectionEnum::RIGHT);
 
-            this->state = PlayerStateEnum::MOVING;
-            this->timer = PLAYER_MOVING_TIMER;
+            this->movingState = PlayerStateEnum::MOVING;
+            this->movingCooldown = PLAYER_MOVING_TIMER;
         }
     }
 
     void tryWalkLeft() {
-        if (this->state == PlayerStateEnum::IDLE) {
-            this->position.x = this->position.x - 6;
+        if (this->movingState == PlayerStateEnum::IDLE) {
+            this->position.x = this->position.x - PLAYER_MOVING_UNITS;
             this->setDirection(DirectionEnum::LEFT);
 
-            this->state = PlayerStateEnum::MOVING;
-            this->timer = PLAYER_MOVING_TIMER;
+            this->movingState = PlayerStateEnum::MOVING;
+            this->movingCooldown = PLAYER_MOVING_TIMER;
         }
+    }
+
+    void processExplodingState() {
+        if (this->explodingState == PlayerStateEnum::EXPLODING) {
+            if (this->explodingTimer > 0) {
+                this->explodingTimer--;
+            } else {
+                this->explodingState = PlayerStateEnum::IDLE;
+                // this->position.x = 15, this->position.y = 170;
+            }
+        }
+    }
+
+    void processMovingState() {
+        if (this->movingState == PlayerStateEnum::MOVING) {
+            if (this->movingCooldown > 0) {
+                this->movingCooldown--;
+            } else {
+                this->movingState = PlayerStateEnum::IDLE;
+            }
+        }
+    }
+
+    void processFiringState() {
+        if (this->firingState == PlayerStateEnum::FIRING) {
+            if (this->firingCooldown > 0) {
+                this->firingCooldown--;
+            } else {
+                this->firingState = PlayerStateEnum::IDLE;
+            }
+        }
+    }
+
+    void processAllStates() {
+        processExplodingState();
+        processMovingState();
+        processFiringState();
     }
 
    private:
