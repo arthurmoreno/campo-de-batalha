@@ -1,9 +1,9 @@
 #include <stdlib.h>
 
-#include <iostream>
-#include <vector>
 #include <algorithm>
+#include <iostream>
 #include <sstream>
+#include <vector>
 
 #define SDL_MAIN_HANDLED  // Add this line
 
@@ -28,35 +28,33 @@
 #include "Projectile.hpp"
 #include "SpriteSet.hpp"
 
-
 // *****************************
 // Low level rendering functions
 // *****************************
 
-SDL_Texture* createTextureFromBMPWithGreenBG(SDL_Renderer *renderer, const std::string& spriteFileName){
+SDL_Texture* createTextureFromBMPWithGreenBG(SDL_Renderer* renderer,
+                                             const std::string& spriteFileName) {
     SDL_Surface* tmpSurface = nullptr;
     tmpSurface = SDL_LoadBMP(spriteFileName.c_str());
-    SDL_SetColorKey(
-        tmpSurface, SDL_TRUE,
-        SDL_MapRGB(tmpSurface->format, 0, 255, 0));
-    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, tmpSurface);
+    SDL_SetColorKey(tmpSurface, SDL_TRUE, SDL_MapRGB(tmpSurface->format, 0, 255, 0));
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, tmpSurface);
     SDL_FreeSurface(tmpSurface);
 
     return texture;
 }
 
-SDL_Texture* createTextureFromBMP(SDL_Renderer *renderer, const std::string& spriteFileName){
+SDL_Texture* createTextureFromBMP(SDL_Renderer* renderer, const std::string& spriteFileName) {
     SDL_Surface* tmpSurface = nullptr;
     tmpSurface = SDL_LoadBMP(spriteFileName.c_str());
-    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, tmpSurface);
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, tmpSurface);
     SDL_FreeSurface(tmpSurface);
 
     return texture;
 }
 
 // funcao para carregar os tanques na tela
-void drawPlayer(int playerPosition, SDL_Rect position, SDL_Texture *playerTexture,
-                  SpriteSet& playerSpriteSet, SDL_Renderer *renderer) {
+void drawPlayer(int playerPosition, SDL_Rect position, SDL_Texture* playerTexture,
+                SpriteSet& playerSpriteSet, SDL_Renderer* renderer) {
     SDL_Rect playerSpriteRect;
     switch (playerPosition) {
         case static_cast<int>(DirectionEnum::UP):
@@ -78,8 +76,8 @@ void drawPlayer(int playerPosition, SDL_Rect position, SDL_Texture *playerTextur
     SDL_RenderCopy(renderer, playerTexture, &playerSpriteRect, &position);
 }
 
-void renderText(SDL_Renderer* renderer, TTF_Font* font, const std::string& text, int x, int y, SDL_Color color) {
-
+void renderText(SDL_Renderer* renderer, TTF_Font* font, const std::string& text, int x, int y,
+                SDL_Color color) {
     // Render text to an SDL_Surface
     SDL_Surface* textSurface = TTF_RenderUTF8_Blended(font, text.c_str(), color);
     if (!textSurface) {
@@ -113,7 +111,6 @@ void renderInteger(SDL_Renderer* renderer, TTF_Font* font, int number, int x, in
     // Convert integer to string
     std::string text = std::to_string(number);
 
-
     // Render text to an SDL_Surface
     SDL_Surface* textSurface = TTF_RenderUTF8_Blended(font, text.c_str(), color);
     if (!textSurface) {
@@ -139,7 +136,6 @@ void renderInteger(SDL_Renderer* renderer, TTF_Font* font, int number, int x, in
     SDL_FreeSurface(textSurface);
     SDL_DestroyTexture(textTexture);
 }
-
 
 // *****************************
 // Audio utils functions
@@ -215,9 +211,10 @@ bool checkCollisionBetweenTwoRects(int ax, int ay, int aw, int ah, int cx, int c
     return (((ax > dx) || (bx < cx) || (ay > dy) || (by < cy)));
 }
 
-bool checkCollision(const SDL_Rect& firstPlayerPosition, const SDL_Rect& secondPlayerPosition, const SDL_Rect& wall,
-                    const SDL_Rect& menu, std::vector<Projectile>& projectiles,
-                    const bool checkProjectiles, const bool shouldErase) {
+bool checkCollision(const SDL_Rect& firstPlayerPosition, const SDL_Rect& secondPlayerPosition,
+                    const SDL_Rect& wall, const SDL_Rect& menu,
+                    std::vector<Projectile>& projectiles, const bool checkProjectiles,
+                    const bool shouldErase) {
     bool notCollidedWithProjectile = true;
     if (checkProjectiles) {
         for (auto projectile = projectiles.begin(); projectile != projectiles.end();) {
@@ -225,7 +222,8 @@ bool checkCollision(const SDL_Rect& firstPlayerPosition, const SDL_Rect& secondP
                 firstPlayerPosition.x, firstPlayerPosition.y, firstPlayerPosition.w,
                 firstPlayerPosition.h, projectile->position.x, projectile->position.y,
                 projectile->position.w, projectile->position.h);
-            std::cout << "Not collided with projectile: " << _notCollidedWithProjectile << std::endl;
+            std::cout << "Not collided with projectile: " << _notCollidedWithProjectile
+                      << std::endl;
             notCollidedWithProjectile = (notCollidedWithProjectile && _notCollidedWithProjectile);
 
             if (!_notCollidedWithProjectile && shouldErase) {
@@ -250,7 +248,8 @@ bool checkCollision(const SDL_Rect& firstPlayerPosition, const SDL_Rect& secondP
             notCollidedWithProjectile);
 }
 
-void fireProjectile(Player& player, std::vector<Projectile>& projectiles, size_t& projectiles_counter) {
+void fireProjectile(Player& player, std::vector<Projectile>& projectiles,
+                    size_t& projectiles_counter) {
     if (player.firingState == PlayerStateEnum::IDLE) {
         Projectile projectile = Projectile(projectiles_counter);
 
@@ -335,8 +334,7 @@ void processProjectilesPhysics(std::vector<Projectile>& projectiles) {
         }
         if (projectile->position.x < -10 || projectile->position.x > 1000 ||
             projectile->position.y < -10 || projectile->position.y > 1000) {
-            projectile =
-                projectiles.erase(projectile);  // erase returns the next valid iterator
+            projectile = projectiles.erase(projectile);  // erase returns the next valid iterator
         } else {
             ++projectile;  // Only increment if no deletion occurred
         }
@@ -369,11 +367,9 @@ SDL_KeyCode getLastPressedKey(std::vector<SDL_KeyCode>& pressedKeys) {
     }
 }
 
-void getKeyboardInput(
-    SDL_Event& event, bool& quitApp, bool& quitScene,
-    std::vector<SDL_KeyCode>& pressedKeysPlayer1,
-    std::vector<SDL_KeyCode>& pressedKeysPlayer2
-){
+void getKeyboardInput(SDL_Event& event, bool& quitApp, bool& quitScene,
+                      std::vector<SDL_KeyCode>& pressedKeysPlayer1,
+                      std::vector<SDL_KeyCode>& pressedKeysPlayer2) {
     while (SDL_PollEvent(&event))  // loop de eventos
     {
         switch (event.type) {
@@ -483,14 +479,9 @@ void getKeyboardInput(
 // Scenes
 // *******************************
 
-
-void runTitleScreen(
-    SDL_Texture *titleScreenTexture, SDL_Renderer *renderer, SDL_Event& event,
-    bool& quitApp, SceneSelection& selectedScene,
-    TTF_Font* fontArmaliteRifle24, TTF_Font* fontArmaliteRifle50, 
-    SDL_Color whiteColor, SDL_Color blackColor
-) {
-
+void runTitleScreen(SDL_Texture* titleScreenTexture, SDL_Renderer* renderer, SDL_Event& event,
+                    bool& quitApp, SceneSelection& selectedScene, TTF_Font* fontArmaliteRifle24,
+                    TTF_Font* fontArmaliteRifle50, SDL_Color whiteColor, SDL_Color blackColor) {
     Uint32 pressEnterCounter = 0;
 
     bool quitScene = false;
@@ -537,13 +528,10 @@ void runTitleScreen(
     }
 }
 
-void runMainMenu (
-    SDL_Renderer *renderer, SDL_Event& event,
-    bool& quitApp, SceneSelection& selectedScene,
-    SDL_Texture *titleScreenTexture, SDL_Texture *projectileTexture,
-    TTF_Font* fontArmaliteRifle24, TTF_Font* fontArmaliteRifle50, 
-    SDL_Color whiteColor, SDL_Color blackColor
-) {
+void runMainMenu(SDL_Renderer* renderer, SDL_Event& event, bool& quitApp,
+                 SceneSelection& selectedScene, SDL_Texture* titleScreenTexture,
+                 SDL_Texture* projectileTexture, TTF_Font* fontArmaliteRifle24,
+                 TTF_Font* fontArmaliteRifle50, SDL_Color whiteColor, SDL_Color blackColor) {
     const int GAME_MATCH_OPTION_X = 200;
     const int GAME_MATCH_OPTION_Y = 270;
 
@@ -555,7 +543,7 @@ void runMainMenu (
 
     Uint32 pressEnterCounter = 0;
     bool quitScene = false;
-    enum struct Options { GAME_MATCH = 0, TITLE_SCREEN = 1, UNKNOWN = 2};
+    enum struct Options { GAME_MATCH = 0, TITLE_SCREEN = 1, UNKNOWN = 2 };
 
     Options selectedOption = Options::GAME_MATCH;
     SDL_Rect blitPosition;
@@ -566,7 +554,6 @@ void runMainMenu (
     while (!quitScene)  // loop para controlar o fim do jogo
     {
         Uint32 frameStart = SDL_GetTicks();
-
 
         while (SDL_PollEvent(&event))  // menu do jogo.
         {
@@ -614,10 +601,11 @@ void runMainMenu (
         SDL_RenderCopy(renderer, titleScreenTexture, NULL, NULL);
 
         renderText(renderer, fontArmaliteRifle50, "Campo de Batalha", 80, 60, blackColor);
-        renderText(renderer, fontArmaliteRifle24, "Start Match", GAME_MATCH_OPTION_X, GAME_MATCH_OPTION_Y, blackColor);
-        renderText(renderer, fontArmaliteRifle24, "Back to title Screen", TITLE_SCREEN_OPTION_X, TITLE_SCREEN_OPTION_Y, blackColor);
+        renderText(renderer, fontArmaliteRifle24, "Start Match", GAME_MATCH_OPTION_X,
+                   GAME_MATCH_OPTION_Y, blackColor);
+        renderText(renderer, fontArmaliteRifle24, "Back to title Screen", TITLE_SCREEN_OPTION_X,
+                   TITLE_SCREEN_OPTION_Y, blackColor);
         if (pressEnterCounter >= 0 && pressEnterCounter < 50) {
-
             SDL_RenderCopy(renderer, projectileTexture, NULL, &blitPosition);
         }
         pressEnterCounter = (pressEnterCounter >= 75) ? 0 : pressEnterCounter + 1;
@@ -634,13 +622,10 @@ void runMainMenu (
     }
 }
 
-void runGameMatch(
-    SDL_Renderer *renderer, SDL_Event& event, TTF_Font* fontArmaliteRifle24,
-    Player& player1, Player& player2, 
-    SDL_Texture *projectileTexture, SDL_Texture *explosionTexture, SDL_Texture *backgroundTexture,
-    SceneSelection& selectedScene, int& winnerIdNumber, bool& quitApp
-) {
-
+void runGameMatch(SDL_Renderer* renderer, SDL_Event& event, TTF_Font* fontArmaliteRifle24,
+                  Player& player1, Player& player2, SDL_Texture* projectileTexture,
+                  SDL_Texture* explosionTexture, SDL_Texture* backgroundTexture,
+                  SceneSelection& selectedScene, int& winnerIdNumber, bool& quitApp) {
     std::vector<Projectile> projectiles{};
     size_t projectiles_counter = 0;
 
@@ -693,43 +678,52 @@ void runGameMatch(
         getKeyboardInput(event, quitApp, quitScene, pressedKeysPlayer1, pressedKeysPlayer2);
 
         lastPressedKeyPlayer1 = getLastPressedKey(pressedKeysPlayer1);
-        const SDL_Rect player1CollisionBox = createCollisionBox(player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
-        const SDL_Rect player2CollisionBox = createCollisionBox(player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
+        const SDL_Rect player1CollisionBox = createCollisionBox(
+            player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
+        const SDL_Rect player2CollisionBox = createCollisionBox(
+            player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
         switch (lastPressedKeyPlayer1) {
             case SDLK_UP: {
-                SDL_Rect movingToCollisionBox = createCollisionBox(player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
+                SDL_Rect movingToCollisionBox = createCollisionBox(
+                    player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
                 movingToCollisionBox.y = movingToCollisionBox.y - PLAYER_MOVING_UNITS;
-                if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu, projectiles, false, false)) {
+                if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu,
+                                   projectiles, false, false)) {
                     player1.tryWalkUp();
                 }
                 break;
             }
             case SDLK_DOWN: {
-                SDL_Rect movingToCollisionBox = createCollisionBox(player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
+                SDL_Rect movingToCollisionBox = createCollisionBox(
+                    player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
                 movingToCollisionBox.y = movingToCollisionBox.y + PLAYER_MOVING_UNITS;
-                if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu, projectiles, false, false)) {
+                if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu,
+                                   projectiles, false, false)) {
                     player1.tryWalkDown();
                 }
                 break;
             }
             case SDLK_RIGHT: {
-                SDL_Rect movingToCollisionBox = createCollisionBox(player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
+                SDL_Rect movingToCollisionBox = createCollisionBox(
+                    player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
                 movingToCollisionBox.x = movingToCollisionBox.x + PLAYER_MOVING_UNITS;
-                if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu, projectiles, false, false)) {
+                if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu,
+                                   projectiles, false, false)) {
                     player1.tryWalkRight();
                 }
                 break;
             }
             case SDLK_LEFT: {
-                SDL_Rect movingToCollisionBox = createCollisionBox(player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
+                SDL_Rect movingToCollisionBox = createCollisionBox(
+                    player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
                 movingToCollisionBox.x = movingToCollisionBox.x - PLAYER_MOVING_UNITS;
-                if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu, projectiles, false, false)) {
+                if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu,
+                                   projectiles, false, false)) {
                     player1.tryWalkLeft();
                 }
                 break;
             }
-            case SDLK_m:
-            {
+            case SDLK_m: {
                 fireProjectile(player1, projectiles, projectiles_counter);
             } break;
             default:
@@ -739,39 +733,46 @@ void runGameMatch(
         lastPressedKeyPlayer2 = getLastPressedKey(pressedKeysPlayer2);
         switch (lastPressedKeyPlayer2) {
             case SDLK_w: {
-                SDL_Rect movingToCollisionBox = createCollisionBox(player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
+                SDL_Rect movingToCollisionBox = createCollisionBox(
+                    player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
                 movingToCollisionBox.y = movingToCollisionBox.y - PLAYER_MOVING_UNITS;
-                if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu, projectiles, false, false)) {
+                if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu,
+                                   projectiles, false, false)) {
                     player2.tryWalkUp();
                 }
                 break;
             }
             case SDLK_s: {
-                SDL_Rect movingToCollisionBox = createCollisionBox(player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
+                SDL_Rect movingToCollisionBox = createCollisionBox(
+                    player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
                 movingToCollisionBox.y = movingToCollisionBox.y + PLAYER_MOVING_UNITS;
-                if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu, projectiles, false, false)) {
+                if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu,
+                                   projectiles, false, false)) {
                     player2.tryWalkDown();
                 }
                 break;
             }
             case SDLK_d: {
-                SDL_Rect movingToCollisionBox = createCollisionBox(player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
+                SDL_Rect movingToCollisionBox = createCollisionBox(
+                    player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
                 movingToCollisionBox.x = movingToCollisionBox.x + PLAYER_MOVING_UNITS;
-                if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu, projectiles, false, false)) {
+                if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu,
+                                   projectiles, false, false)) {
                     player2.tryWalkRight();
                 }
                 break;
             }
             case SDLK_a: {
-                SDL_Rect movingToCollisionBox = createCollisionBox(player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
+                SDL_Rect movingToCollisionBox = createCollisionBox(
+                    player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
                 movingToCollisionBox.x = movingToCollisionBox.x - PLAYER_MOVING_UNITS;
-                if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu, projectiles, false, false)) {
+                if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu,
+                                   projectiles, false, false)) {
                     player2.tryWalkLeft();
                 }
                 break;
             }
-            case SDLK_f:
-            {
+            case SDLK_f: {
                 fireProjectile(player2, projectiles, projectiles_counter);
             } break;
             default:
@@ -779,14 +780,16 @@ void runGameMatch(
         }
 
         if (player1.explodingState != PlayerStateEnum::EXPLODING &&
-            !checkCollision(player1CollisionBox, player2CollisionBox, wall, menu, projectiles, true, true)) {
+            !checkCollision(player1CollisionBox, player2CollisionBox, wall, menu, projectiles, true,
+                            true)) {
             scorePlayer2++;
             player1.explodingState = PlayerStateEnum::EXPLODING;
             player1.explodingTimer = PLAYER_EXPLODING_TIMER;
         }
 
         if (player2.explodingState != PlayerStateEnum::EXPLODING &&
-            !checkCollision(player2CollisionBox, player1CollisionBox, wall, menu, projectiles, true, true)) {
+            !checkCollision(player2CollisionBox, player1CollisionBox, wall, menu, projectiles, true,
+                            true)) {
             scorePlayer1++;
             player2.explodingState = PlayerStateEnum::EXPLODING;
             player2.explodingTimer = PLAYER_EXPLODING_TIMER;
@@ -801,15 +804,15 @@ void runGameMatch(
         // SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
         SDL_RenderCopy(renderer, backgroundTexture, NULL, NULL);
 
-        drawPlayer(player1.direction, player1.position, player1.spriteTexture,
-                        player1.spriteSet, renderer);
+        drawPlayer(player1.direction, player1.position, player1.spriteTexture, player1.spriteSet,
+                   renderer);
 
         if (player1.explodingState == PlayerStateEnum::EXPLODING) {
             SDL_RenderCopy(renderer, explosionTexture, NULL, &player1.position);
         }
 
-        drawPlayer(player2.direction, player2.position, player2.spriteTexture,
-                        player2.spriteSet, renderer);
+        drawPlayer(player2.direction, player2.position, player2.spriteTexture, player2.spriteSet,
+                   renderer);
 
         if (player2.explodingState == PlayerStateEnum::EXPLODING) {
             SDL_RenderCopy(renderer, explosionTexture, NULL, &player2.position);
@@ -820,8 +823,10 @@ void runGameMatch(
             SDL_RenderCopy(renderer, projectileTexture, NULL, &blitPosition);
         }
 
-        renderInteger(renderer, fontArmaliteRifle24, scorePlayer2, scorePlayer2Position.x, scorePlayer2Position.y);
-        renderInteger(renderer, fontArmaliteRifle24, scorePlayer1, scorePlayer1Position.x, scorePlayer1Position.y);
+        renderInteger(renderer, fontArmaliteRifle24, scorePlayer2, scorePlayer2Position.x,
+                      scorePlayer2Position.y);
+        renderInteger(renderer, fontArmaliteRifle24, scorePlayer1, scorePlayer1Position.x,
+                      scorePlayer1Position.y);
 
         SDL_RenderPresent(renderer);
 
@@ -849,11 +854,9 @@ void runGameMatch(
     }
 }
 
-void runWinnerScene(
-    SDL_Renderer *renderer, SDL_Event& event, SDL_Texture *winnerScreenTexture, SceneSelection& selectedScene,
-    int& winnerIdNumber, bool& quitApp, TTF_Font* fontArmaliteRifle24, SDL_Color blackColor
-) {
-
+void runWinnerScene(SDL_Renderer* renderer, SDL_Event& event, SDL_Texture* winnerScreenTexture,
+                    SceneSelection& selectedScene, int& winnerIdNumber, bool& quitApp,
+                    TTF_Font* fontArmaliteRifle24, SDL_Color blackColor) {
     Uint32 pressEnterCounter = 0;
 
     bool quitScene = false;
@@ -901,7 +904,7 @@ int main(int argc, char* args[]) {
         return 1;
     }
 
-    SDL_Init(SDL_INIT_TIMER);    // inicializa��o das fun��es de tempo
+    SDL_Init(SDL_INIT_TIMER);  // inicializa��o das fun��es de tempo
 
     if (SDL_Init(SDL_INIT_AUDIO) < 0) {
         std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
@@ -917,24 +920,27 @@ int main(int argc, char* args[]) {
     Player player1{"Player1"};
     Player player2{"Player2"};
 
-    SDL_Event event;    // variavel para determina��o de eventos
+    SDL_Event event;  // variavel para determina��o de eventos
 
     int winnerIdNumber;
     bool quitApp = false, quitScene = false;
 
     SceneSelection selectedScene = SceneSelection::TITLE_SCREEN;
 
-    SDL_Window *window = SDL_CreateWindow("Campo de Batalha", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, SDL_WINDOW_SHOWN);
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_Window* window = SDL_CreateWindow("Campo de Batalha", SDL_WINDOWPOS_CENTERED,
+                                          SDL_WINDOWPOS_CENTERED, 640, 480, SDL_WINDOW_SHOWN);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
     player1.loadSprite("resources/jogador1.bmp", renderer);
     player2.loadSprite("resources/jogador2.bmp", renderer);
-    SDL_Texture *projectileTexture = createTextureFromBMPWithGreenBG(renderer, "resources/bala.bmp");
-    SDL_Texture *explosionTexture = createTextureFromBMPWithGreenBG(renderer, "resources/explosao.bmp");
-    SDL_Texture *titleScreenTexture = createTextureFromBMP(renderer, "resources/telainicial.bmp");
-    SDL_Texture *menuSurfaceTexture = createTextureFromBMP(renderer, "resources/telainicial.bmp");
-    SDL_Texture *backgroundTexture = createTextureFromBMP(renderer, "resources/fundo.bmp");
-    SDL_Texture *winnerScreenTexture = createTextureFromBMP(renderer, "resources/telavencedor.bmp");
+    SDL_Texture* projectileTexture =
+        createTextureFromBMPWithGreenBG(renderer, "resources/bala.bmp");
+    SDL_Texture* explosionTexture =
+        createTextureFromBMPWithGreenBG(renderer, "resources/explosao.bmp");
+    SDL_Texture* titleScreenTexture = createTextureFromBMP(renderer, "resources/telainicial.bmp");
+    SDL_Texture* menuSurfaceTexture = createTextureFromBMP(renderer, "resources/telainicial.bmp");
+    SDL_Texture* backgroundTexture = createTextureFromBMP(renderer, "resources/fundo.bmp");
+    SDL_Texture* winnerScreenTexture = createTextureFromBMP(renderer, "resources/telavencedor.bmp");
 
     // Load a font
     const std::string fontFileName = "resources/armalite_rifle.ttf";
@@ -961,20 +967,17 @@ int main(int argc, char* args[]) {
     SDL_Color whiteColor = {255, 255, 255, 255};
     SDL_Color blackColor = {16, 18, 28, 255};
 
-
     SDL_AudioSpec wavSpec;
     Track tracks[3];
 
     // Load the WAV files
-    const char* filenames[3] = {
-        "resources/songtrack001.wav",
-        "resources/songtrack002.wav",
-        "resources/songtrack003.wav"
-    };
+    const char* filenames[3] = {"resources/songtrack001.wav", "resources/songtrack002.wav",
+                                "resources/songtrack003.wav"};
 
     for (int i = 0; i < 3; ++i) {
         if (SDL_LoadWAV(filenames[i], &wavSpec, &tracks[i].start, &tracks[i].length) == NULL) {
-            std::cerr << "Failed to load WAV: " << filenames[i] << " Error: " << SDL_GetError() << std::endl;
+            std::cerr << "Failed to load WAV: " << filenames[i] << " Error: " << SDL_GetError()
+                      << std::endl;
             SDL_Quit();
             return -1;
         }
@@ -983,7 +986,7 @@ int main(int argc, char* args[]) {
     AudioData audioData;
     audioData.tracks = tracks;
     audioData.numTracks = 3;
-    audioData.currentTrack = 0; // Start with track 0
+    audioData.currentTrack = 0;  // Start with track 0
     audioData.pos = tracks[0].start;
     audioData.remaining = tracks[0].length;
 
@@ -1010,32 +1013,21 @@ int main(int argc, char* args[]) {
 
     while (!quitApp)  // loop principal
     {
-        if (selectedScene == SceneSelection::TITLE_SCREEN)
-        {
-            runTitleScreen(
-                titleScreenTexture, renderer, event,
-                quitApp, selectedScene,
-                fontArmaliteRifle24, fontArmaliteRifle50, 
-                whiteColor, blackColor
-            );
-        } else if (selectedScene == SceneSelection::MAIN_MENU)
-        {
-            runMainMenu(
-                renderer, event, quitApp, selectedScene,
-                titleScreenTexture, projectileTexture,
-                fontArmaliteRifle24, fontArmaliteRifle50, whiteColor, blackColor);
+        if (selectedScene == SceneSelection::TITLE_SCREEN) {
+            runTitleScreen(titleScreenTexture, renderer, event, quitApp, selectedScene,
+                           fontArmaliteRifle24, fontArmaliteRifle50, whiteColor, blackColor);
+        } else if (selectedScene == SceneSelection::MAIN_MENU) {
+            runMainMenu(renderer, event, quitApp, selectedScene, titleScreenTexture,
+                        projectileTexture, fontArmaliteRifle24, fontArmaliteRifle50, whiteColor,
+                        blackColor);
         } else if (selectedScene == SceneSelection::GAME_MATCH)  // condicao 2 (o jogo em si)
         {
-            runGameMatch(
-                renderer, event, fontArmaliteRifle24, player1, player2, 
-                projectileTexture, explosionTexture, backgroundTexture,
-                selectedScene, winnerIdNumber, quitApp
-            );
+            runGameMatch(renderer, event, fontArmaliteRifle24, player1, player2, projectileTexture,
+                         explosionTexture, backgroundTexture, selectedScene, winnerIdNumber,
+                         quitApp);
         } else if (selectedScene == SceneSelection::WINNER_SCREEN) {
-            runWinnerScene(
-                renderer, event, winnerScreenTexture, selectedScene,
-                winnerIdNumber, quitApp, fontArmaliteRifle24, blackColor
-            );
+            runWinnerScene(renderer, event, winnerScreenTexture, selectedScene, winnerIdNumber,
+                           quitApp, fontArmaliteRifle24, blackColor);
 
         } else {
             selectedScene = SceneSelection::TITLE_SCREEN;

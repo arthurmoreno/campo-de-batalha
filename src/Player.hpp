@@ -20,7 +20,7 @@ class Player {
     std::string playerName;
     SpriteSet spriteSet;
     SDL_Surface* spriteSurface;
-    SDL_Texture *spriteTexture;
+    SDL_Texture* spriteTexture;
 
     int direction;
     SDL_Rect position;
@@ -51,9 +51,7 @@ class Player {
                           32);  // Virado para esquerda
     };
 
-    ~Player() {
-        SDL_DestroyTexture(spriteTexture);
-    }
+    ~Player() { SDL_DestroyTexture(spriteTexture); }
 
     void resetStates() {
         movingState = PlayerStateEnum::IDLE;
@@ -61,11 +59,9 @@ class Player {
         explodingState = PlayerStateEnum::STABLE;
     }
 
-    void loadSprite(const std::string& spriteFileName, SDL_Renderer *renderer) {
+    void loadSprite(const std::string& spriteFileName, SDL_Renderer* renderer) {
         spriteSurface = SDL_LoadBMP(spriteFileName.c_str());
-        SDL_SetColorKey(
-            spriteSurface, SDL_TRUE,
-            SDL_MapRGB(spriteSurface->format, 0, 255, 0));
+        SDL_SetColorKey(spriteSurface, SDL_TRUE, SDL_MapRGB(spriteSurface->format, 0, 255, 0));
         spriteTexture = SDL_CreateTextureFromSurface(renderer, spriteSurface);
         SDL_FreeSurface(spriteSurface);
     };
