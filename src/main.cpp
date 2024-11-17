@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <sstream>
 
 #define SDL_MAIN_HANDLED  // Add this line
 
@@ -75,6 +76,34 @@ void drawPlayer(int playerPosition, SDL_Rect position, SDL_Texture *playerTextur
             break;
     }
     SDL_RenderCopy(renderer, playerTexture, &playerSpriteRect, &position);
+}
+
+void renderText(SDL_Renderer* renderer, TTF_Font* font, const std::string& text, int x, int y, SDL_Color color) {
+
+    // Render text to an SDL_Surface
+    SDL_Surface* textSurface = TTF_RenderUTF8_Blended(font, text.c_str(), color);
+    if (!textSurface) {
+        SDL_Log("TTF_RenderUTF8_Blended Error: %s", TTF_GetError());
+        return;
+    }
+
+    // Convert SDL_Surface to SDL_Texture
+    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+    if (!textTexture) {
+        SDL_Log("SDL_CreateTextureFromSurface Error: %s", SDL_GetError());
+        SDL_FreeSurface(textSurface);
+        return;
+    }
+
+    // Set destination rectangle for rendering the text
+    SDL_Rect destRect = {x, y, textSurface->w, textSurface->h};
+
+    // Render the texture
+    SDL_RenderCopy(renderer, textTexture, nullptr, &destRect);
+
+    // Clean up
+    SDL_FreeSurface(textSurface);
+    SDL_DestroyTexture(textTexture);
 }
 
 // Function to render an integer as text
@@ -412,87 +441,385 @@ void getKeyboardInput(
 
 void runTitleScreen(
     SDL_Texture *titleScreenTexture, SDL_Renderer *renderer, SDL_Event& event,
-    bool& quitApp, bool& quitScene, SceneSelection& selectedScene
+    bool& quitApp, SceneSelection& selectedScene,
+    TTF_Font* fontArmaliteRifle24, TTF_Font* fontArmaliteRifle50, 
+    SDL_Color whiteColor, SDL_Color blackColor
 ) {
-    SDL_RenderClear(renderer);
 
-    while (SDL_PollEvent(&event))  // condi��o de entrada (enter)
-    {
-        if (event.type == SDL_KEYDOWN) {
-            switch (event.key.keysym.sym) {
-                case SDLK_RETURN:
-                    quitScene = false;
-                    selectedScene = SceneSelection::MAIN_MENU;
-                    break;
-                default:
-                    break;
-            }
-        }
-        if (event.type == SDL_QUIT)  // para fechar o programa clicando no X
-        {
-            quitApp = true;
-        }
-    }
-    SDL_RenderCopy(renderer, titleScreenTexture, NULL, NULL);
-    SDL_RenderPresent(renderer);
-    SDL_Delay(16);
-}
-
-void runMainMenu (
-    SDL_Texture *menuSurfaceTexture, SDL_Renderer *renderer, SDL_Event& event,
-    bool& quitApp, SceneSelection& selectedScene) {
-
-    SDL_RenderClear(renderer);
-
-    while (SDL_PollEvent(&event))  // menu do jogo.
-    {
-        if (event.type == SDL_KEYDOWN)  // evento do tipo tecla pressionada
-        {
-            switch (event.key.keysym.sym) {
-                case SDLK_1:
-                    selectedScene = SceneSelection::UNKNOWN;
-                    break;
-                case SDLK_2:
-                    selectedScene = SceneSelection::GAME_MATCH;
-                    break;
-                case SDLK_3:
-                    selectedScene = SceneSelection::TITLE_SCREEN;
-                    break;
-                default:
-                    break;
-            }
-        }
-        if (event.type == SDL_QUIT)  // fechar o programa caso cliquem no X
-        {
-            quitApp = true;
-        }
-    }
-
-    SDL_RenderCopy(renderer, menuSurfaceTexture, NULL, NULL);
-    SDL_RenderPresent(renderer);
-    SDL_Delay(16);
-}
-
-void runGameMatch() {
-
-}
-
-void runWinnerScene(
-    SDL_Renderer *renderer, SDL_Event& event, SDL_Texture *winnerScreenTexture, SceneSelection& selectedScene,
-    int& winnerIdNumber, bool& quitApp
-) {
+    Uint32 pressEnterCounter = 0;
 
     bool quitScene = false;
     while (!quitScene)  // loop para controlar o fim do jogo
     {
-        while (SDL_PollEvent(&event))  // verificar caso alguma tecla seja pressionada
+        Uint32 frameStart = SDL_GetTicks();
+
+        while (SDL_PollEvent(&event))  // condi��o de entrada (enter)
         {
             if (event.type == SDL_KEYDOWN) {
                 switch (event.key.keysym.sym) {
-                    default:
+                    case SDLK_RETURN:
                         quitScene = true;
                         selectedScene = SceneSelection::MAIN_MENU;
+                        break;
+                    default:
+                        break;
                 }
+            }
+            if (event.type == SDL_QUIT)  // para fechar o programa clicando no X
+            {
+                quitScene = true;
+                quitApp = true;
+            }
+        }
+        SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, titleScreenTexture, NULL, NULL);
+
+        renderText(renderer, fontArmaliteRifle50, "Campo de Batalha", 80, 60, blackColor);
+        if (pressEnterCounter >= 0 && pressEnterCounter < 50) {
+            renderText(renderer, fontArmaliteRifle24, "Press Enter!", 240, 280, blackColor);
+        }
+        pressEnterCounter = (pressEnterCounter >= 75) ? 0 : pressEnterCounter + 1;
+
+        SDL_RenderPresent(renderer);
+
+        // Calculate the time taken for the frame
+        Uint32 frameTime = SDL_GetTicks() - frameStart;
+
+        // Delay to maintain the desired frame rate, if necessary
+        if (frameTime < FRAME_DELAY) {
+            SDL_Delay(FRAME_DELAY - frameTime);
+        }
+    }
+}
+
+void runMainMenu (
+    SDL_Renderer *renderer, SDL_Event& event,
+    bool& quitApp, SceneSelection& selectedScene,
+    SDL_Texture *titleScreenTexture, SDL_Texture *projectileTexture,
+    TTF_Font* fontArmaliteRifle24, TTF_Font* fontArmaliteRifle50, 
+    SDL_Color whiteColor, SDL_Color blackColor
+) {
+    const int GAME_MATCH_OPTION_X = 200;
+    const int GAME_MATCH_OPTION_Y = 270;
+
+    const int TITLE_SCREEN_OPTION_X = 200;
+    const int TITLE_SCREEN_OPTION_Y = 300;
+
+    const int BULLET_OFFSET_X = 25;
+    const int BULLET_OFFSET_Y = 7;
+
+    Uint32 pressEnterCounter = 0;
+    bool quitScene = false;
+    enum struct Options { GAME_MATCH = 0, TITLE_SCREEN = 1, UNKNOWN = 2};
+
+    Options selectedOption = Options::GAME_MATCH;
+    SDL_Rect blitPosition;
+    blitPosition.x = GAME_MATCH_OPTION_X - BULLET_OFFSET_X;
+    blitPosition.y = GAME_MATCH_OPTION_Y + BULLET_OFFSET_Y;
+    blitPosition.w = 12;
+    blitPosition.h = 12;
+    while (!quitScene)  // loop para controlar o fim do jogo
+    {
+        Uint32 frameStart = SDL_GetTicks();
+
+
+        while (SDL_PollEvent(&event))  // menu do jogo.
+        {
+            if (event.type == SDL_KEYDOWN)  // evento do tipo tecla pressionada
+            {
+                switch (event.key.keysym.sym) {
+                    case SDLK_UP:
+                        if (selectedOption == Options::GAME_MATCH) {
+                            selectedOption = Options::TITLE_SCREEN;
+                            blitPosition.y = TITLE_SCREEN_OPTION_Y + BULLET_OFFSET_Y;
+                        } else {
+                            selectedOption = Options::GAME_MATCH;
+                            blitPosition.y = GAME_MATCH_OPTION_Y + BULLET_OFFSET_Y;
+                        }
+                        break;
+                    case SDLK_DOWN:
+                        if (selectedOption == Options::GAME_MATCH) {
+                            selectedOption = Options::TITLE_SCREEN;
+                            blitPosition.y = TITLE_SCREEN_OPTION_Y + BULLET_OFFSET_Y;
+                        } else {
+                            selectedOption = Options::GAME_MATCH;
+                            blitPosition.y = GAME_MATCH_OPTION_Y + BULLET_OFFSET_Y;
+                        }
+                        break;
+                    case SDLK_RETURN:
+                        quitScene = true;
+                        if (selectedOption == Options::GAME_MATCH) {
+                            selectedScene = SceneSelection::GAME_MATCH;
+                        } else {
+                            selectedScene = SceneSelection::TITLE_SCREEN;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+            if (event.type == SDL_QUIT)  // fechar o programa caso cliquem no X
+            {
+                quitScene = true;
+                quitApp = true;
+            }
+        }
+
+        SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, titleScreenTexture, NULL, NULL);
+
+        renderText(renderer, fontArmaliteRifle50, "Campo de Batalha", 80, 60, blackColor);
+        renderText(renderer, fontArmaliteRifle24, "Start Match", GAME_MATCH_OPTION_X, GAME_MATCH_OPTION_Y, blackColor);
+        renderText(renderer, fontArmaliteRifle24, "Back to title Screen", TITLE_SCREEN_OPTION_X, TITLE_SCREEN_OPTION_Y, blackColor);
+        if (pressEnterCounter >= 0 && pressEnterCounter < 50) {
+
+            SDL_RenderCopy(renderer, projectileTexture, NULL, &blitPosition);
+        }
+        pressEnterCounter = (pressEnterCounter >= 75) ? 0 : pressEnterCounter + 1;
+
+        SDL_RenderPresent(renderer);
+
+        // Calculate the time taken for the frame
+        Uint32 frameTime = SDL_GetTicks() - frameStart;
+
+        // Delay to maintain the desired frame rate, if necessary
+        if (frameTime < FRAME_DELAY) {
+            SDL_Delay(FRAME_DELAY - frameTime);
+        }
+    }
+}
+
+void runGameMatch(
+    SDL_Renderer *renderer, SDL_Event& event, TTF_Font* fontArmaliteRifle24,
+    Player& player1, Player& player2, 
+    SDL_Texture *projectileTexture, SDL_Texture *explosionTexture, SDL_Texture *backgroundTexture,
+    SceneSelection& selectedScene, int& winnerIdNumber, bool& quitApp
+) {
+
+    std::vector<Projectile> projectiles{};
+    size_t projectiles_counter = 0;
+
+    int scorePlayer1 = 0, scorePlayer2 = 0;
+
+    player1.resetStates();
+    player2.resetStates();
+
+    SDL_Rect wall;
+    SDL_Rect menu;
+    SDL_Rect scorePlayer1Position;
+    SDL_Rect scorePlayer2Position;
+
+    scorePlayer1Position.x = 212, scorePlayer1Position.y = 435;
+    scorePlayer2Position.x = 550, scorePlayer2Position.y = 435;
+
+    player1.position.x = 15, player1.position.y = 170, player1.position.w = 32,
+    player1.position.h = 32;
+    player2.position.x = 560, player2.position.y = 260, player2.position.w = 32,
+    player2.position.h = 32;
+
+    wall.x = 287, wall.y = 102, wall.w = 53, wall.h = 240;
+    menu.x = 1, menu.y = 413, menu.w = 638, menu.h = 66;
+
+    SDL_RenderClear(renderer);
+
+    SDL_Rect playerSpriteRect;
+
+    player1.setDirection(DirectionEnum::RIGHT);
+    playerSpriteRect = player1.spriteSet.getRect("RIGHT");
+    SDL_RenderCopy(renderer, player1.spriteTexture, &playerSpriteRect, &player1.position);
+
+    player2.setDirection(DirectionEnum::LEFT);
+    playerSpriteRect = player2.spriteSet.getRect("LEFT");
+    SDL_RenderCopy(renderer, player2.spriteTexture, &playerSpriteRect, &player2.position);
+    SDL_RenderPresent(renderer);
+
+    SDL_KeyCode lastPressedKeyPlayer1 = SDL_KeyCode::SDLK_UNKNOWN;
+    SDL_KeyCode lastPressedKeyPlayer2 = SDL_KeyCode::SDLK_UNKNOWN;
+
+    std::vector<SDL_KeyCode> pressedKeysPlayer1;
+    std::vector<SDL_KeyCode> pressedKeysPlayer2;
+
+    bool quitScene = false;
+
+    while (!quitScene)  // loop para controlar o fim do jogo
+    {
+        Uint32 frameStart = SDL_GetTicks();
+
+        getKeyboardInput(event, quitApp, quitScene, pressedKeysPlayer1, pressedKeysPlayer2);
+
+        lastPressedKeyPlayer1 = getLastPressedKey(pressedKeysPlayer1);
+        const SDL_Rect player1CollisionBox = createCollisionBox(player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
+        const SDL_Rect player2CollisionBox = createCollisionBox(player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
+        switch (lastPressedKeyPlayer1) {
+            case SDLK_UP: {
+                SDL_Rect movingToCollisionBox = createCollisionBox(player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
+                movingToCollisionBox.y = movingToCollisionBox.y - PLAYER_MOVING_UNITS;
+                if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu, projectiles, false)) {
+                    player1.tryWalkUp();
+                }
+                break;
+            }
+            case SDLK_DOWN: {
+                SDL_Rect movingToCollisionBox = createCollisionBox(player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
+                movingToCollisionBox.y = movingToCollisionBox.y + PLAYER_MOVING_UNITS;
+                if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu, projectiles, false)) {
+                    player1.tryWalkDown();
+                }
+                break;
+            }
+            case SDLK_RIGHT: {
+                SDL_Rect movingToCollisionBox = createCollisionBox(player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
+                movingToCollisionBox.x = movingToCollisionBox.x + PLAYER_MOVING_UNITS;
+                if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu, projectiles, false)) {
+                    player1.tryWalkRight();
+                }
+                break;
+            }
+            case SDLK_LEFT: {
+                SDL_Rect movingToCollisionBox = createCollisionBox(player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
+                movingToCollisionBox.x = movingToCollisionBox.x - PLAYER_MOVING_UNITS;
+                if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu, projectiles, false)) {
+                    player1.tryWalkLeft();
+                }
+                break;
+            }
+            case SDLK_m:
+            {
+                fireProjectile(player1, projectiles, projectiles_counter);
+            } break;
+            default:
+                break;
+        }
+
+        lastPressedKeyPlayer2 = getLastPressedKey(pressedKeysPlayer2);
+        switch (lastPressedKeyPlayer2) {
+            case SDLK_w: {
+                SDL_Rect movingToCollisionBox = createCollisionBox(player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
+                movingToCollisionBox.y = movingToCollisionBox.y - PLAYER_MOVING_UNITS;
+                if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu, projectiles, false)) {
+                    player2.tryWalkUp();
+                }
+                break;
+            }
+            case SDLK_s: {
+                SDL_Rect movingToCollisionBox = createCollisionBox(player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
+                movingToCollisionBox.y = movingToCollisionBox.y + PLAYER_MOVING_UNITS;
+                if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu, projectiles, false)) {
+                    player2.tryWalkDown();
+                }
+                break;
+            }
+            case SDLK_d: {
+                SDL_Rect movingToCollisionBox = createCollisionBox(player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
+                movingToCollisionBox.x = movingToCollisionBox.x + PLAYER_MOVING_UNITS;
+                if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu, projectiles, false)) {
+                    player2.tryWalkRight();
+                }
+                break;
+            }
+            case SDLK_a: {
+                SDL_Rect movingToCollisionBox = createCollisionBox(player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
+                movingToCollisionBox.x = movingToCollisionBox.x - PLAYER_MOVING_UNITS;
+                if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu, projectiles, false)) {
+                    player2.tryWalkLeft();
+                }
+                break;
+            }
+            case SDLK_f:
+            {
+                fireProjectile(player2, projectiles, projectiles_counter);
+            } break;
+            default:
+                break;
+        }
+
+        if (player1.explodingState != PlayerStateEnum::EXPLODING &&
+            !checkCollision(player1CollisionBox, player2CollisionBox, wall, menu, projectiles, true)) {
+            scorePlayer2++;
+            player1.explodingState = PlayerStateEnum::EXPLODING;
+            player1.explodingTimer = PLAYER_EXPLODING_TIMER;
+        }
+
+        if (player2.explodingState != PlayerStateEnum::EXPLODING &&
+            !checkCollision(player2CollisionBox, player1CollisionBox, wall, menu, projectiles, true)) {
+            scorePlayer1++;
+            player2.explodingState = PlayerStateEnum::EXPLODING;
+            player2.explodingTimer = PLAYER_EXPLODING_TIMER;
+        }
+
+        player1.processAllStates();
+        player2.processAllStates();
+        processProjectilesPhysics(projectiles);
+
+        SDL_RenderClear(renderer);
+
+        // SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
+        SDL_RenderCopy(renderer, backgroundTexture, NULL, NULL);
+
+        drawPlayer(player1.direction, player1.position, player1.spriteTexture,
+                        player1.spriteSet, renderer);
+
+        if (player1.explodingState == PlayerStateEnum::EXPLODING) {
+            SDL_RenderCopy(renderer, explosionTexture, NULL, &player1.position);
+        }
+
+        drawPlayer(player2.direction, player2.position, player2.spriteTexture,
+                        player2.spriteSet, renderer);
+
+        if (player2.explodingState == PlayerStateEnum::EXPLODING) {
+            SDL_RenderCopy(renderer, explosionTexture, NULL, &player2.position);
+        }
+
+        for (auto projectile = projectiles.begin(); projectile != projectiles.end(); ++projectile) {
+            SDL_Rect blitPosition = projectile->position;
+            SDL_RenderCopy(renderer, projectileTexture, NULL, &blitPosition);
+        }
+
+        renderInteger(renderer, fontArmaliteRifle24, scorePlayer2, scorePlayer2Position.x, scorePlayer2Position.y);
+        renderInteger(renderer, fontArmaliteRifle24, scorePlayer1, scorePlayer1Position.x, scorePlayer1Position.y);
+
+        SDL_RenderPresent(renderer);
+
+        // Calculate the time taken for the frame
+        Uint32 frameTime = SDL_GetTicks() - frameStart;
+
+        // Delay to maintain the desired frame rate, if necessary
+        if (frameTime < FRAME_DELAY) {
+            SDL_Delay(FRAME_DELAY - frameTime);
+        }
+
+        // condi��es para verificar a vitoria dos jogadores
+        if (scorePlayer1 >= 6)  // verificar vitoria do jogador 1
+        {
+            winnerIdNumber = 2;
+            selectedScene = SceneSelection::WINNER_SCREEN;
+            quitScene = true;
+        }
+        if (scorePlayer2 >= 6)  // verificar vitoria do jogador 2
+        {
+            winnerIdNumber = 2;
+            selectedScene = SceneSelection::WINNER_SCREEN;
+            quitScene = true;
+        }
+    }
+}
+
+void runWinnerScene(
+    SDL_Renderer *renderer, SDL_Event& event, SDL_Texture *winnerScreenTexture, SceneSelection& selectedScene,
+    int& winnerIdNumber, bool& quitApp, TTF_Font* fontArmaliteRifle24, SDL_Color blackColor
+) {
+
+    Uint32 pressEnterCounter = 0;
+
+    bool quitScene = false;
+    bool firstFrame = true;
+    while (!quitScene)  // loop para controlar o fim do jogo
+    {
+        while (SDL_PollEvent(&event))  // verificar caso alguma tecla seja pressionada
+        {
+            if (event.type == SDL_KEYDOWN && !firstFrame) {
+                quitScene = true;
+                selectedScene = SceneSelection::MAIN_MENU;
             }
             if (event.type == SDL_QUIT) {
                 quitScene = true;
@@ -503,8 +830,23 @@ void runWinnerScene(
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, winnerScreenTexture, NULL, NULL);
 
+        std::stringstream ss;
+        ss << "The winner is Player " << winnerIdNumber;
+        renderText(renderer, fontArmaliteRifle24, ss.str().c_str(), 80, 60, blackColor);
+
+        if (pressEnterCounter >= 0 && pressEnterCounter < 50) {
+            renderText(renderer, fontArmaliteRifle24, "Press any key!", 240, 280, blackColor);
+        }
+        pressEnterCounter = (pressEnterCounter >= 75) ? 0 : pressEnterCounter + 1;
+
         SDL_RenderPresent(renderer);
-        SDL_Delay(16);
+
+        if (firstFrame) {
+            SDL_Delay(2000);
+            firstFrame = false;
+        } else {
+            SDL_Delay(16);
+        }
     }
 }
 
@@ -522,31 +864,12 @@ int main(int argc, char* args[]) {
         return 1;
     }
 
-    // SDL_Surface* titleScreen = nullptr;
-    // SDL_Surface* menuSurface = nullptr;
-    SDL_Surface* winnerScreenSurface = nullptr;
-    // SDL_Surface* backgroundSurface = nullptr;
-    // SDL_Surface* projectileSurface = nullptr;
-    // SDL_Surface* explosao = nullptr;
-    // SDL_Surface* pontuacao = nullptr;
-
-    // SpriteSet pontuacao01{"Pontuacao01"};
     Player player1{"Player1"};
     Player player2{"Player2"};
 
-    std::vector<Projectile> projectiles{};
-    size_t projectiles_counter = 0;
-
-    SDL_Rect wall;  // retangulo para determinar a colis�o com a parede central
-    SDL_Rect menu;  // retangulo para determinar a colis�o com a barra de informa��es inferior
-    SDL_Rect offset3;      // coordenada da bala
-    SDL_Rect pontuacao02;  // coordenada da pontua��o do jogador 1
-    SDL_Rect pontuacao03;  // coordenada da pontua��o do jogador 2
-    SDL_Rect bala01;
-    SDL_Rect vencedor;  // coordenada do numero do vencedor
     SDL_Event event;    // variavel para determina��o de eventos
 
-    int bala1, bala2, pontuacao1, pontuacao2, winnerIdNumber;
+    int winnerIdNumber;
     bool quitApp = false, quitScene = false;
 
     SceneSelection selectedScene = SceneSelection::TITLE_SCREEN;
@@ -559,13 +882,14 @@ int main(int argc, char* args[]) {
     SDL_Texture *projectileTexture = createTextureFromBMPWithGreenBG(renderer, "resources/bala.bmp");
     SDL_Texture *explosionTexture = createTextureFromBMPWithGreenBG(renderer, "resources/explosao.bmp");
     SDL_Texture *titleScreenTexture = createTextureFromBMP(renderer, "resources/telainicial.bmp");
-    SDL_Texture *menuSurfaceTexture = createTextureFromBMP(renderer, "resources/menu.bmp");
+    SDL_Texture *menuSurfaceTexture = createTextureFromBMP(renderer, "resources/telainicial.bmp");
     SDL_Texture *backgroundTexture = createTextureFromBMP(renderer, "resources/fundo.bmp");
     SDL_Texture *winnerScreenTexture = createTextureFromBMP(renderer, "resources/telavencedor.bmp");
 
     // Load a font
-    TTF_Font* font = TTF_OpenFont("resources/armalite_rifle.ttf", 24);
-    if (!font) {
+    const std::string fontFileName = "resources/armalite_rifle.ttf";
+    TTF_Font* fontArmaliteRifle24 = TTF_OpenFont(fontFileName.c_str(), 24);
+    if (!fontArmaliteRifle24) {
         std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
@@ -574,227 +898,46 @@ int main(int argc, char* args[]) {
         return 1;
     }
 
+    TTF_Font* fontArmaliteRifle50 = TTF_OpenFont(fontFileName.c_str(), 50);
+    if (!fontArmaliteRifle24) {
+        std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        TTF_Quit();
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_Color whiteColor = {255, 255, 255, 255};
+    SDL_Color blackColor = {16, 18, 28, 255};
+
     while (!quitApp)  // loop principal
     {
         if (selectedScene == SceneSelection::TITLE_SCREEN)
         {
             runTitleScreen(
                 titleScreenTexture, renderer, event,
-                quitApp, quitScene, selectedScene
+                quitApp, selectedScene,
+                fontArmaliteRifle24, fontArmaliteRifle50, 
+                whiteColor, blackColor
             );
         } else if (selectedScene == SceneSelection::MAIN_MENU)
         {
-            runMainMenu(menuSurfaceTexture, renderer, event, quitApp, selectedScene);
+            runMainMenu(
+                renderer, event, quitApp, selectedScene,
+                titleScreenTexture, projectileTexture,
+                fontArmaliteRifle24, fontArmaliteRifle50, whiteColor, blackColor);
         } else if (selectedScene == SceneSelection::GAME_MATCH)  // condicao 2 (o jogo em si)
         {
-            player1.resetStates();
-            player2.resetStates();
-            projectiles.clear();
-            projectiles.shrink_to_fit();
-
-            // atribuicao de variaveis inteiras , retangulos , coordenadas e etc.
-            pontuacao1 = 0;
-            pontuacao2 = 0;
-            vencedor.x = 233, vencedor.y = 103;
-
-            pontuacao02.x = 212, pontuacao02.y = 435;
-            pontuacao03.x = 550, pontuacao03.y = 435;
-
-            player1.position.x = 15, player1.position.y = 170, player1.position.w = 32,
-            player1.position.h = 32;
-            player2.position.x = 560, player2.position.y = 260, player2.position.w = 32,
-            player2.position.h = 32;
-
-            wall.x = 287, wall.y = 102, wall.w = 53, wall.h = 240;
-            menu.x = 1, menu.y = 413, menu.w = 638, menu.h = 66;
-
-            bala01.x = 0, bala01.y = 0, bala01.w = 10, bala01.h = 10;
-
-            SDL_RenderClear(renderer);
-
-            SDL_Rect playerSpriteRect;
-
-            player1.setDirection(DirectionEnum::RIGHT);
-            playerSpriteRect = player1.spriteSet.getRect("RIGHT");
-            SDL_RenderCopy(renderer, player1.spriteTexture, &playerSpriteRect, &player1.position);
-
-            player2.setDirection(DirectionEnum::LEFT);
-            playerSpriteRect = player2.spriteSet.getRect("LEFT");
-            SDL_RenderCopy(renderer, player2.spriteTexture, &playerSpriteRect, &player2.position);
-            SDL_RenderPresent(renderer);
-
-            SDL_KeyCode lastPressedKeyPlayer1 = SDL_KeyCode::SDLK_UNKNOWN;
-            SDL_KeyCode lastPressedKeyPlayer2 = SDL_KeyCode::SDLK_UNKNOWN;
-
-            std::vector<SDL_KeyCode> pressedKeysPlayer1;
-            std::vector<SDL_KeyCode> pressedKeysPlayer2;
-
-            while (!quitScene)  // loop para controlar o fim do jogo
-            {
-                Uint32 frameStart = SDL_GetTicks();
-
-                getKeyboardInput(event, quitApp, quitScene, pressedKeysPlayer1, pressedKeysPlayer2);
-
-                lastPressedKeyPlayer1 = getLastPressedKey(pressedKeysPlayer1);
-                const SDL_Rect player1CollisionBox = createCollisionBox(player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
-                const SDL_Rect player2CollisionBox = createCollisionBox(player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
-                switch (lastPressedKeyPlayer1) {
-                    case SDLK_UP: {
-                        SDL_Rect movingToCollisionBox = createCollisionBox(player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
-                        movingToCollisionBox.y = movingToCollisionBox.y - PLAYER_MOVING_UNITS;
-                        if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu, projectiles, false)) {
-                            player1.tryWalkUp();
-                        }
-                        break;
-                    }
-                    case SDLK_DOWN: {
-                        SDL_Rect movingToCollisionBox = createCollisionBox(player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
-                        movingToCollisionBox.y = movingToCollisionBox.y + PLAYER_MOVING_UNITS;
-                        if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu, projectiles, false)) {
-                            player1.tryWalkDown();
-                        }
-                        break;
-                    }
-                    case SDLK_RIGHT: {
-                        SDL_Rect movingToCollisionBox = createCollisionBox(player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
-                        movingToCollisionBox.x = movingToCollisionBox.x + PLAYER_MOVING_UNITS;
-                        if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu, projectiles, false)) {
-                            player1.tryWalkRight();
-                        }
-                        break;
-                    }
-                    case SDLK_LEFT: {
-                        SDL_Rect movingToCollisionBox = createCollisionBox(player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
-                        movingToCollisionBox.x = movingToCollisionBox.x - PLAYER_MOVING_UNITS;
-                        if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu, projectiles, false)) {
-                            player1.tryWalkLeft();
-                        }
-                        break;
-                    }
-                    case SDLK_m:
-                    {
-                        fireProjectile(player1, projectiles, projectiles_counter);
-                    } break;
-                    default:
-                        break;
-                }
-                
-
-                lastPressedKeyPlayer2 = getLastPressedKey(pressedKeysPlayer2);
-                switch (lastPressedKeyPlayer2) {
-                    case SDLK_w: {
-                        SDL_Rect movingToCollisionBox = createCollisionBox(player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
-                        movingToCollisionBox.y = movingToCollisionBox.y - PLAYER_MOVING_UNITS;
-                        if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu, projectiles, false)) {
-                            player2.tryWalkUp();
-                        }
-                        break;
-                    }
-                    case SDLK_s: {
-                        SDL_Rect movingToCollisionBox = createCollisionBox(player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
-                        movingToCollisionBox.y = movingToCollisionBox.y + PLAYER_MOVING_UNITS;
-                        if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu, projectiles, false)) {
-                            player2.tryWalkDown();
-                        }
-                        break;
-                    }
-                    case SDLK_d: {
-                        SDL_Rect movingToCollisionBox = createCollisionBox(player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
-                        movingToCollisionBox.x = movingToCollisionBox.x + PLAYER_MOVING_UNITS;
-                        if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu, projectiles, false)) {
-                            player2.tryWalkRight();
-                        }
-                        break;
-                    }
-                    case SDLK_a: {
-                        SDL_Rect movingToCollisionBox = createCollisionBox(player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
-                        movingToCollisionBox.x = movingToCollisionBox.x - PLAYER_MOVING_UNITS;
-                        if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu, projectiles, false)) {
-                            player2.tryWalkLeft();
-                        }
-                        break;
-                    }
-                    case SDLK_f:
-                    {
-                        fireProjectile(player2, projectiles, projectiles_counter);
-                    } break;
-                    default:
-                        break;
-                }
-
-                if (player1.explodingState != PlayerStateEnum::EXPLODING &&
-                    !checkCollision(player1CollisionBox, player2CollisionBox, wall, menu, projectiles, true)) {
-                    pontuacao2 = pontuacao2 + 1;
-                    player1.explodingState = PlayerStateEnum::EXPLODING;
-                    player1.explodingTimer = PLAYER_EXPLODING_TIMER;
-                }
-
-                if (player2.explodingState != PlayerStateEnum::EXPLODING &&
-                    !checkCollision(player2CollisionBox, player1CollisionBox, wall, menu, projectiles, true)) {
-                    pontuacao1 = pontuacao1 + 1;
-                    player2.explodingState = PlayerStateEnum::EXPLODING;
-                    player2.explodingTimer = PLAYER_EXPLODING_TIMER;
-                }
-
-                player1.processAllStates();
-                player2.processAllStates();
-                processProjectilesPhysics(projectiles);
-
-                SDL_RenderClear(renderer);
-
-                // SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
-                SDL_RenderCopy(renderer, backgroundTexture, NULL, NULL);
-
-                drawPlayer(player1.direction, player1.position, player1.spriteTexture,
-                             player1.spriteSet, renderer);
-
-                if (player1.explodingState == PlayerStateEnum::EXPLODING) {
-                    SDL_RenderCopy(renderer, explosionTexture, NULL, &player1.position);
-                }
-
-                drawPlayer(player2.direction, player2.position, player2.spriteTexture,
-                             player2.spriteSet, renderer);
-
-                if (player2.explodingState == PlayerStateEnum::EXPLODING) {
-                    SDL_RenderCopy(renderer, explosionTexture, NULL, &player2.position);
-                }
-
-                for (auto projectile = projectiles.begin(); projectile != projectiles.end(); ++projectile) {
-                    SDL_Rect blitPosition = projectile->position;
-                    SDL_RenderCopy(renderer, projectileTexture, NULL, &blitPosition);
-                }
-
-                renderInteger(renderer, font, pontuacao2, pontuacao03.x, pontuacao03.y);
-                renderInteger(renderer, font, pontuacao1, pontuacao02.x, pontuacao02.y);
-
-                SDL_RenderPresent(renderer);
-
-                // Calculate the time taken for the frame
-                Uint32 frameTime = SDL_GetTicks() - frameStart;
-
-                // Delay to maintain the desired frame rate, if necessary
-                if (frameTime < FRAME_DELAY) {
-                    SDL_Delay(FRAME_DELAY - frameTime);
-                }
-
-                // condi��es para verificar a vitoria dos jogadores
-                if (pontuacao1 == 6)  // verificar vitoria do jogador 1
-                {
-                    winnerIdNumber = 2;
-                    selectedScene = SceneSelection::WINNER_SCREEN;
-                    quitScene = true;
-                }
-                if (pontuacao2 == 6)  // verificar vitoria do jogador 2
-                {
-                    winnerIdNumber = 2;
-                    selectedScene = SceneSelection::WINNER_SCREEN;
-                    quitScene = true;
-                }
-            }
+            runGameMatch(
+                renderer, event, fontArmaliteRifle24, player1, player2, 
+                projectileTexture, explosionTexture, backgroundTexture,
+                selectedScene, winnerIdNumber, quitApp
+            );
         } else if (selectedScene == SceneSelection::WINNER_SCREEN) {
             runWinnerScene(
                 renderer, event, winnerScreenTexture, selectedScene,
-                winnerIdNumber, quitApp
+                winnerIdNumber, quitApp, fontArmaliteRifle24, blackColor
             );
 
         } else {
