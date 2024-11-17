@@ -296,7 +296,7 @@ SDL_KeyCode getLastPressedKey(std::vector<SDL_KeyCode>& pressedKeys) {
 }
 
 void getKeyboardInput(
-    SDL_Event& event, int& quit1, int& quit2,
+    SDL_Event& event, bool& quitApp, bool& quitScene,
     std::vector<SDL_KeyCode>& pressedKeysPlayer1,
     std::vector<SDL_KeyCode>& pressedKeysPlayer2
 ){
@@ -340,7 +340,7 @@ void getKeyboardInput(
                         break;
                     }
                     case SDLK_ESCAPE:
-                        quit2 = 1;
+                        quitScene = true;
                         break;
                     // comandos para o tiro dos jogadores 1 e 2
                     case SDLK_m:  // tecla m para o tiro do jogador 1
@@ -399,8 +399,8 @@ void getKeyboardInput(
         }
         if (event.type == SDL_QUIT)  // fechar o programa caso cliquem no X
         {
-            quit1 = 1;
-            quit2 = 1;
+            quitApp = true;
+            quitScene = true;
         }
     }
 }
@@ -412,7 +412,7 @@ void getKeyboardInput(
 
 void runTitleScreen(
     SDL_Texture *titleScreenTexture, SDL_Renderer *renderer, SDL_Event& event,
-    int& quit1, int& quit2, int& entrar
+    bool& quitApp, bool& quitScene, SceneSelection& selectedScene
 ) {
     SDL_RenderClear(renderer);
 
@@ -421,8 +421,8 @@ void runTitleScreen(
         if (event.type == SDL_KEYDOWN) {
             switch (event.key.keysym.sym) {
                 case SDLK_RETURN:
-                    quit2 = 0;
-                    entrar = 3;
+                    quitScene = false;
+                    selectedScene = SceneSelection::MAIN_MENU;
                     break;
                 default:
                     break;
@@ -430,7 +430,7 @@ void runTitleScreen(
         }
         if (event.type == SDL_QUIT)  // para fechar o programa clicando no X
         {
-            quit1 = 1;
+            quitApp = true;
         }
     }
     SDL_RenderCopy(renderer, titleScreenTexture, NULL, NULL);
@@ -440,7 +440,7 @@ void runTitleScreen(
 
 void runMainMenu (
     SDL_Texture *menuSurfaceTexture, SDL_Renderer *renderer, SDL_Event& event,
-    int& quit1, int& entrar) {
+    bool& quitApp, SceneSelection& selectedScene) {
 
     SDL_RenderClear(renderer);
 
@@ -450,13 +450,13 @@ void runMainMenu (
         {
             switch (event.key.keysym.sym) {
                 case SDLK_1:
-                    entrar = 4;
+                    selectedScene = SceneSelection::UNKNOWN;
                     break;
                 case SDLK_2:
-                    entrar = 2;
+                    selectedScene = SceneSelection::GAME_MATCH;
                     break;
                 case SDLK_3:
-                    entrar = 1;
+                    selectedScene = SceneSelection::TITLE_SCREEN;
                     break;
                 default:
                     break;
@@ -464,13 +464,48 @@ void runMainMenu (
         }
         if (event.type == SDL_QUIT)  // fechar o programa caso cliquem no X
         {
-            quit1 = 1;
+            quitApp = true;
         }
     }
 
     SDL_RenderCopy(renderer, menuSurfaceTexture, NULL, NULL);
     SDL_RenderPresent(renderer);
     SDL_Delay(16);
+}
+
+void runGameMatch() {
+
+}
+
+void runWinnerScene(
+    SDL_Renderer *renderer, SDL_Event& event, SDL_Texture *winnerScreenTexture, SceneSelection& selectedScene,
+    int& winnerIdNumber, bool& quitApp
+) {
+
+    bool quitScene = false;
+    while (!quitScene)  // loop para controlar o fim do jogo
+    {
+        while (SDL_PollEvent(&event))  // verificar caso alguma tecla seja pressionada
+        {
+            if (event.type == SDL_KEYDOWN) {
+                switch (event.key.keysym.sym) {
+                    default:
+                        quitScene = true;
+                        selectedScene = SceneSelection::MAIN_MENU;
+                }
+            }
+            if (event.type == SDL_QUIT) {
+                quitScene = true;
+                quitApp = true;
+            }
+        }
+
+        SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, winnerScreenTexture, NULL, NULL);
+
+        SDL_RenderPresent(renderer);
+        SDL_Delay(16);
+    }
 }
 
 int main(int argc, char* args[]) {
@@ -511,12 +546,10 @@ int main(int argc, char* args[]) {
     SDL_Rect vencedor;  // coordenada do numero do vencedor
     SDL_Event event;    // variavel para determina��o de eventos
 
-    int quit1, quit2, x, entrar, bala1, bala2, pontuacao1, pontuacao2,
-        vencedor0;
+    int bala1, bala2, pontuacao1, pontuacao2, winnerIdNumber;
+    bool quitApp = false, quitScene = false;
 
-    quit1 = 0;
-    quit2 = 0;
-    entrar = 1;
+    SceneSelection selectedScene = SceneSelection::TITLE_SCREEN;
 
     SDL_Window *window = SDL_CreateWindow("Campo de Batalha", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, SDL_WINDOW_SHOWN);
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
@@ -541,18 +574,18 @@ int main(int argc, char* args[]) {
         return 1;
     }
 
-    while (quit1 == 0)  // loop principal
+    while (!quitApp)  // loop principal
     {
-        if (entrar == 1)  // condi��o 1 (para tela inicial)
+        if (selectedScene == SceneSelection::TITLE_SCREEN)
         {
             runTitleScreen(
                 titleScreenTexture, renderer, event,
-                quit1, quit2, entrar
+                quitApp, quitScene, selectedScene
             );
-        } else if (entrar == 3)  // condi��o de entrada no menu
+        } else if (selectedScene == SceneSelection::MAIN_MENU)
         {
-            runMainMenu(menuSurfaceTexture, renderer, event, quit1, entrar);
-        } else if (entrar == 2)  // condicao 2 (o jogo em si)
+            runMainMenu(menuSurfaceTexture, renderer, event, quitApp, selectedScene);
+        } else if (selectedScene == SceneSelection::GAME_MATCH)  // condicao 2 (o jogo em si)
         {
             player1.resetStates();
             player2.resetStates();
@@ -577,32 +610,17 @@ int main(int argc, char* args[]) {
 
             bala01.x = 0, bala01.y = 0, bala01.w = 10, bala01.h = 10;
 
-            // Adding rects with names
-            // pontuacao01.addRect("ZERO", 0, 3, 25, 35);
-            // pontuacao01.addRect("ONE", 50, 3, 25, 35);
-            // pontuacao01.addRect("TWO", 98, 3, 25, 35);
-            // pontuacao01.addRect("THREE", 147, 3, 25, 35);
-            // pontuacao01.addRect("FOUR", 195, 3, 25, 35);
-            // pontuacao01.addRect("FIVE", 245, 3, 25, 35);
-            // pontuacao01.addRect("SIX", 294, 3, 25, 35);
-
-            // SDL_Rect pontuacaoZeroRect = pontuacao01.getRect("ZERO");
-            // SDL_RenderCopy(renderer, pontuacaoTexture, &pontuacaoZeroRect, &pontuacao02);
-            // SDL_RenderCopy(renderer, pontuacaoTexture, &pontuacaoZeroRect, &pontuacao03);
-
             SDL_RenderClear(renderer);
 
             SDL_Rect playerSpriteRect;
 
             player1.setDirection(DirectionEnum::RIGHT);
             playerSpriteRect = player1.spriteSet.getRect("RIGHT");
-            // SDL_BlitSurface(player1.spriteSurface, &playerSpriteRect, screen, &player1.position);
             SDL_RenderCopy(renderer, player1.spriteTexture, &playerSpriteRect, &player1.position);
 
             player2.setDirection(DirectionEnum::LEFT);
             playerSpriteRect = player2.spriteSet.getRect("LEFT");
             SDL_RenderCopy(renderer, player2.spriteTexture, &playerSpriteRect, &player2.position);
-            // SDL_BlitSurface(player2.spriteSurface, &playerSpriteRect, screen, &player2.position);
             SDL_RenderPresent(renderer);
 
             SDL_KeyCode lastPressedKeyPlayer1 = SDL_KeyCode::SDLK_UNKNOWN;
@@ -611,11 +629,11 @@ int main(int argc, char* args[]) {
             std::vector<SDL_KeyCode> pressedKeysPlayer1;
             std::vector<SDL_KeyCode> pressedKeysPlayer2;
 
-            while (quit2 == 0)  // loop para controlar o fim do jogo
+            while (!quitScene)  // loop para controlar o fim do jogo
             {
                 Uint32 frameStart = SDL_GetTicks();
 
-                getKeyboardInput(event, quit1, quit2, pressedKeysPlayer1, pressedKeysPlayer2);
+                getKeyboardInput(event, quitApp, quitScene, pressedKeysPlayer1, pressedKeysPlayer2);
 
                 lastPressedKeyPlayer1 = getLastPressedKey(pressedKeysPlayer1);
                 const SDL_Rect player1CollisionBox = createCollisionBox(player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
@@ -762,64 +780,25 @@ int main(int argc, char* args[]) {
                 // condi��es para verificar a vitoria dos jogadores
                 if (pontuacao1 == 6)  // verificar vitoria do jogador 1
                 {
-                    SDL_RenderClear(renderer);
-
-                    vencedor0 = 1;
-                    SDL_Delay(1000);
-                    quit2 = 1;
-                    // telaprincipal = SDL_LoadBMP("resources/telavencedor.bmp");
-                    // SDL_BlitSurface(telaprincipal, NULL, screen, NULL);
-
-                    SDL_RenderCopy(renderer, winnerScreenTexture, NULL, NULL);
-
-                    SDL_RenderPresent(renderer);
-                    SDL_Delay(2000);
-                    while (entrar != 1) {
-                        if (SDL_PollEvent(&event))  // verificar caso alguma tecla seja pressionada
-                        {
-                            if (event.type == SDL_KEYDOWN) {
-                                switch (event.key.keysym.sym) {
-                                    default:
-                                        entrar = 1;
-                                }
-                            }
-                            if (event.type == SDL_QUIT) {
-                                quit1 = 1;
-                            }
-                        }
-                    }
+                    winnerIdNumber = 2;
+                    selectedScene = SceneSelection::WINNER_SCREEN;
+                    quitScene = true;
                 }
                 if (pontuacao2 == 6)  // verificar vitoria do jogador 2
                 {
-
-                    SDL_RenderClear(renderer);
-
-                    vencedor0 = 2;
-                    SDL_Delay(1000);
-                    quit2 = 1;
-
-                    SDL_RenderCopy(renderer, winnerScreenTexture, NULL, NULL);
-
-                    SDL_RenderPresent(renderer);
-                    SDL_Delay(2000);
-                    while (entrar != 1) {
-                        if (SDL_PollEvent(&event))  // verificar caso alguma tecla seja pressionada
-                        {
-                            if (event.type == SDL_KEYDOWN) {
-                                switch (event.key.keysym.sym) {
-                                    default:
-                                        entrar = 1;
-                                }
-                            }
-                            if (event.type == SDL_QUIT) {
-                                quit1 = 1;
-                            }
-                        }
-                    }
+                    winnerIdNumber = 2;
+                    selectedScene = SceneSelection::WINNER_SCREEN;
+                    quitScene = true;
                 }
             }
+        } else if (selectedScene == SceneSelection::WINNER_SCREEN) {
+            runWinnerScene(
+                renderer, event, winnerScreenTexture, selectedScene,
+                winnerIdNumber, quitApp
+            );
+
         } else {
-            entrar = 1;
+            selectedScene = SceneSelection::TITLE_SCREEN;
         }
     }
     SDL_Quit();

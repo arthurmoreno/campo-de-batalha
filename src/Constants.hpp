@@ -10,6 +10,8 @@ enum struct DirectionEnum { UP = 0, DOWN = 1, RIGHT = 2, LEFT = 3 };
 
 enum struct PlayerStateEnum { IDLE = 0, MOVING = 1, FIRING = 2, STABLE = 3, EXPLODING = 4 };
 
+enum struct SceneSelection { TITLE_SCREEN = 0, MAIN_MENU = 1, GAME_MATCH = 2, WINNER_SCREEN = 3, UNKNOWN = 4};
+
 // Function to convert Jogador2Direction to string
 inline std::string directionToString(DirectionEnum dir) {
     switch (dir) {
