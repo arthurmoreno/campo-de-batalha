@@ -140,6 +140,48 @@ void renderInteger(SDL_Renderer* renderer, TTF_Font* font, int number, int x, in
     SDL_DestroyTexture(textTexture);
 }
 
+
+// *****************************
+// Audio utils functions
+// *****************************
+
+struct Track {
+    Uint8* start;
+    Uint32 length;
+};
+
+struct AudioData {
+    Track* tracks;     // Array of tracks
+    int numTracks;     // Number of tracks
+    int currentTrack;  // Index of the current track
+    Uint8* pos;        // Current position in the current track
+    Uint32 remaining;  // Remaining length in the current track
+};
+
+void audioCallback(void* userdata, Uint8* stream, int len) {
+    AudioData* audio = static_cast<AudioData*>(userdata);
+
+    Uint32 length = static_cast<Uint32>(len);
+
+    if (audio->remaining == 0) {
+        // Choose a random track
+        audio->currentTrack = rand() % audio->numTracks;
+        audio->pos = audio->tracks[audio->currentTrack].start;
+        audio->remaining = audio->tracks[audio->currentTrack].length;
+    }
+
+    Uint32 lenToCopy = (length > audio->remaining) ? audio->remaining : length;
+    SDL_memcpy(stream, audio->pos, lenToCopy);
+
+    audio->pos += lenToCopy;
+    audio->remaining -= lenToCopy;
+
+    // If we didn't fill the entire buffer, pad the rest with silence
+    if (lenToCopy < length) {
+        SDL_memset(stream + lenToCopy, 0, length - lenToCopy);
+    }
+}
+
 // *******************************
 // Collision and Physics functions
 // *******************************
@@ -174,21 +216,24 @@ bool checkCollisionBetweenTwoRects(int ax, int ay, int aw, int ah, int cx, int c
 }
 
 bool checkCollision(const SDL_Rect& firstPlayerPosition, const SDL_Rect& secondPlayerPosition, const SDL_Rect& wall,
-                    const SDL_Rect& menu, std::vector<Projectile>& projectiles, const bool shouldErase) {
+                    const SDL_Rect& menu, std::vector<Projectile>& projectiles,
+                    const bool checkProjectiles, const bool shouldErase) {
     bool notCollidedWithProjectile = true;
-    for (auto projectile = projectiles.begin(); projectile != projectiles.end();) {
-        bool _notCollidedWithProjectile = checkCollisionBetweenTwoRects(
-            firstPlayerPosition.x, firstPlayerPosition.y, firstPlayerPosition.w,
-            firstPlayerPosition.h, projectile->position.x, projectile->position.y,
-            projectile->position.w, projectile->position.h);
-        std::cout << "Not collided with projectile: " << _notCollidedWithProjectile << std::endl;
-        notCollidedWithProjectile = (notCollidedWithProjectile && _notCollidedWithProjectile);
+    if (checkProjectiles) {
+        for (auto projectile = projectiles.begin(); projectile != projectiles.end();) {
+            bool _notCollidedWithProjectile = checkCollisionBetweenTwoRects(
+                firstPlayerPosition.x, firstPlayerPosition.y, firstPlayerPosition.w,
+                firstPlayerPosition.h, projectile->position.x, projectile->position.y,
+                projectile->position.w, projectile->position.h);
+            std::cout << "Not collided with projectile: " << _notCollidedWithProjectile << std::endl;
+            notCollidedWithProjectile = (notCollidedWithProjectile && _notCollidedWithProjectile);
 
-        if (!_notCollidedWithProjectile && shouldErase) {
-            // Collision detected, remove projectile
-            projectile = projectiles.erase(projectile);  // Erase returns the next iterator
-        } else {
-            ++projectile;  // Move to the next element
+            if (!_notCollidedWithProjectile && shouldErase) {
+                // Collision detected, remove projectile
+                projectile = projectiles.erase(projectile);  // Erase returns the next iterator
+            } else {
+                ++projectile;  // Move to the next element
+            }
         }
     }
 
@@ -654,7 +699,7 @@ void runGameMatch(
             case SDLK_UP: {
                 SDL_Rect movingToCollisionBox = createCollisionBox(player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
                 movingToCollisionBox.y = movingToCollisionBox.y - PLAYER_MOVING_UNITS;
-                if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu, projectiles, false)) {
+                if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu, projectiles, false, false)) {
                     player1.tryWalkUp();
                 }
                 break;
@@ -662,7 +707,7 @@ void runGameMatch(
             case SDLK_DOWN: {
                 SDL_Rect movingToCollisionBox = createCollisionBox(player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
                 movingToCollisionBox.y = movingToCollisionBox.y + PLAYER_MOVING_UNITS;
-                if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu, projectiles, false)) {
+                if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu, projectiles, false, false)) {
                     player1.tryWalkDown();
                 }
                 break;
@@ -670,7 +715,7 @@ void runGameMatch(
             case SDLK_RIGHT: {
                 SDL_Rect movingToCollisionBox = createCollisionBox(player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
                 movingToCollisionBox.x = movingToCollisionBox.x + PLAYER_MOVING_UNITS;
-                if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu, projectiles, false)) {
+                if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu, projectiles, false, false)) {
                     player1.tryWalkRight();
                 }
                 break;
@@ -678,7 +723,7 @@ void runGameMatch(
             case SDLK_LEFT: {
                 SDL_Rect movingToCollisionBox = createCollisionBox(player1.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
                 movingToCollisionBox.x = movingToCollisionBox.x - PLAYER_MOVING_UNITS;
-                if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu, projectiles, false)) {
+                if (checkCollision(movingToCollisionBox, player2CollisionBox, wall, menu, projectiles, false, false)) {
                     player1.tryWalkLeft();
                 }
                 break;
@@ -696,7 +741,7 @@ void runGameMatch(
             case SDLK_w: {
                 SDL_Rect movingToCollisionBox = createCollisionBox(player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
                 movingToCollisionBox.y = movingToCollisionBox.y - PLAYER_MOVING_UNITS;
-                if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu, projectiles, false)) {
+                if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu, projectiles, false, false)) {
                     player2.tryWalkUp();
                 }
                 break;
@@ -704,7 +749,7 @@ void runGameMatch(
             case SDLK_s: {
                 SDL_Rect movingToCollisionBox = createCollisionBox(player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
                 movingToCollisionBox.y = movingToCollisionBox.y + PLAYER_MOVING_UNITS;
-                if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu, projectiles, false)) {
+                if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu, projectiles, false, false)) {
                     player2.tryWalkDown();
                 }
                 break;
@@ -712,7 +757,7 @@ void runGameMatch(
             case SDLK_d: {
                 SDL_Rect movingToCollisionBox = createCollisionBox(player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
                 movingToCollisionBox.x = movingToCollisionBox.x + PLAYER_MOVING_UNITS;
-                if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu, projectiles, false)) {
+                if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu, projectiles, false, false)) {
                     player2.tryWalkRight();
                 }
                 break;
@@ -720,7 +765,7 @@ void runGameMatch(
             case SDLK_a: {
                 SDL_Rect movingToCollisionBox = createCollisionBox(player2.position, PLAYER_COLLISION_BOX_SHRINK, PLAYER_COLLISION_BOX_SHRINK);
                 movingToCollisionBox.x = movingToCollisionBox.x - PLAYER_MOVING_UNITS;
-                if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu, projectiles, false)) {
+                if (checkCollision(movingToCollisionBox, player1CollisionBox, wall, menu, projectiles, false, false)) {
                     player2.tryWalkLeft();
                 }
                 break;
@@ -734,14 +779,14 @@ void runGameMatch(
         }
 
         if (player1.explodingState != PlayerStateEnum::EXPLODING &&
-            !checkCollision(player1CollisionBox, player2CollisionBox, wall, menu, projectiles, true)) {
+            !checkCollision(player1CollisionBox, player2CollisionBox, wall, menu, projectiles, true, true)) {
             scorePlayer2++;
             player1.explodingState = PlayerStateEnum::EXPLODING;
             player1.explodingTimer = PLAYER_EXPLODING_TIMER;
         }
 
         if (player2.explodingState != PlayerStateEnum::EXPLODING &&
-            !checkCollision(player2CollisionBox, player1CollisionBox, wall, menu, projectiles, true)) {
+            !checkCollision(player2CollisionBox, player1CollisionBox, wall, menu, projectiles, true, true)) {
             scorePlayer1++;
             player2.explodingState = PlayerStateEnum::EXPLODING;
             player2.explodingTimer = PLAYER_EXPLODING_TIMER;
@@ -842,7 +887,7 @@ void runWinnerScene(
         SDL_RenderPresent(renderer);
 
         if (firstFrame) {
-            SDL_Delay(2000);
+            SDL_Delay(3000);
             firstFrame = false;
         } else {
             SDL_Delay(16);
@@ -857,6 +902,11 @@ int main(int argc, char* args[]) {
     }
 
     SDL_Init(SDL_INIT_TIMER);    // inicializa��o das fun��es de tempo
+
+    if (SDL_Init(SDL_INIT_AUDIO) < 0) {
+        std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
+        return -1;
+    }
 
     if (TTF_Init() == -1) {
         std::cerr << "Failed to initialize SDL_ttf: " << TTF_GetError() << std::endl;
@@ -911,6 +961,53 @@ int main(int argc, char* args[]) {
     SDL_Color whiteColor = {255, 255, 255, 255};
     SDL_Color blackColor = {16, 18, 28, 255};
 
+
+    SDL_AudioSpec wavSpec;
+    Track tracks[3];
+
+    // Load the WAV files
+    const char* filenames[3] = {
+        "resources/songtrack001.wav",
+        "resources/songtrack002.wav",
+        "resources/songtrack003.wav"
+    };
+
+    for (int i = 0; i < 3; ++i) {
+        if (SDL_LoadWAV(filenames[i], &wavSpec, &tracks[i].start, &tracks[i].length) == NULL) {
+            std::cerr << "Failed to load WAV: " << filenames[i] << " Error: " << SDL_GetError() << std::endl;
+            SDL_Quit();
+            return -1;
+        }
+    }
+
+    AudioData audioData;
+    audioData.tracks = tracks;
+    audioData.numTracks = 3;
+    audioData.currentTrack = 0; // Start with track 0
+    audioData.pos = tracks[0].start;
+    audioData.remaining = tracks[0].length;
+
+    // Set the audio callback
+    wavSpec.callback = audioCallback;
+    wavSpec.userdata = &audioData;
+
+    // Open audio device
+    if (SDL_OpenAudio(&wavSpec, NULL) < 0) {
+        std::cerr << "SDL_OpenAudio error: " << SDL_GetError() << std::endl;
+        // Free loaded WAV files
+        for (int i = 0; i < 3; ++i) {
+            SDL_FreeWAV(tracks[i].start);
+        }
+        SDL_Quit();
+        return -1;
+    }
+
+    // Initialize random seed
+    srand(static_cast<unsigned int>(time(0)));
+
+    // Start playing audio
+    SDL_PauseAudio(0);
+
     while (!quitApp)  // loop principal
     {
         if (selectedScene == SceneSelection::TITLE_SCREEN)
@@ -943,6 +1040,13 @@ int main(int argc, char* args[]) {
         } else {
             selectedScene = SceneSelection::TITLE_SCREEN;
         }
+    }
+
+    // Clean up
+    SDL_CloseAudio();
+    // Free loaded WAV files
+    for (int i = 0; i < 3; ++i) {
+        SDL_FreeWAV(tracks[i].start);
     }
     SDL_Quit();
     return 0;
