@@ -25,6 +25,7 @@
 
 #include "Constants.hpp"
 #include "Player.hpp"
+#include "Explosion.hpp"
 #include "Projectile.hpp"
 #include "SpriteSet.hpp"
 
@@ -53,10 +54,10 @@ SDL_Texture* createTextureFromBMP(SDL_Renderer* renderer, const std::string& spr
 }
 
 // funcao para carregar os tanques na tela
-void drawPlayer(int playerPosition, SDL_Rect position, SDL_Texture* playerTexture,
+void drawPlayer(int playerDirection, SDL_Rect position, SDL_Texture* playerTexture,
                 SpriteSet& playerSpriteSet, SDL_Renderer* renderer) {
     SDL_Rect playerSpriteRect;
-    switch (playerPosition) {
+    switch (playerDirection) {
         case static_cast<int>(DirectionEnum::UP):
             playerSpriteRect = playerSpriteSet.getRect("UP");
             break;
@@ -74,6 +75,30 @@ void drawPlayer(int playerPosition, SDL_Rect position, SDL_Texture* playerTextur
             break;
     }
     SDL_RenderCopy(renderer, playerTexture, &playerSpriteRect, &position);
+}
+
+// funcao para carregar os tanques na tela
+void drawExplosion(int explosionFrame, SDL_Rect position, SDL_Texture* explosionTexture,
+                SpriteSet& explosionSpriteSet, SDL_Renderer* renderer) {
+    SDL_Rect explosionSpriteRect;
+    switch (explosionFrame) {
+        case 0:
+            explosionSpriteRect = explosionSpriteSet.getRect("FIRST");
+            break;
+        case 1:
+            explosionSpriteRect = explosionSpriteSet.getRect("SECOND");
+            break;
+        case 2:
+            explosionSpriteRect = explosionSpriteSet.getRect("THIRD");
+            break;
+        case 3:
+            explosionSpriteRect = explosionSpriteSet.getRect("FORTH");
+            break;
+        default:
+            explosionSpriteRect = explosionSpriteSet.getRect("FIRST");
+            break;
+    }
+    SDL_RenderCopy(renderer, explosionTexture, &explosionSpriteRect, &position);
 }
 
 void renderText(SDL_Renderer* renderer, TTF_Font* font, const std::string& text, int x, int y,
@@ -105,8 +130,7 @@ void renderText(SDL_Renderer* renderer, TTF_Font* font, const std::string& text,
 }
 
 // Function to render an integer as text
-void renderInteger(SDL_Renderer* renderer, TTF_Font* font, int number, int x, int y) {
-    SDL_Color color = {255, 255, 255, 255};  // White color for text
+void renderInteger(SDL_Renderer* renderer, TTF_Font* font, int number, int x, int y, SDL_Color color) {
 
     // Convert integer to string
     std::string text = std::to_string(number);
@@ -222,8 +246,6 @@ bool checkCollision(const SDL_Rect& firstPlayerPosition, const SDL_Rect& secondP
                 firstPlayerPosition.x, firstPlayerPosition.y, firstPlayerPosition.w,
                 firstPlayerPosition.h, projectile->position.x, projectile->position.y,
                 projectile->position.w, projectile->position.h);
-            std::cout << "Not collided with projectile: " << _notCollidedWithProjectile
-                      << std::endl;
             notCollidedWithProjectile = (notCollidedWithProjectile && _notCollidedWithProjectile);
 
             if (!_notCollidedWithProjectile && shouldErase) {
@@ -622,10 +644,29 @@ void runMainMenu(SDL_Renderer* renderer, SDL_Event& event, bool& quitApp,
     }
 }
 
-void runGameMatch(SDL_Renderer* renderer, SDL_Event& event, TTF_Font* fontArmaliteRifle24,
+void setExplosionFrame(Player& player, Explosion& explosion) {
+    if (player.explodingTimer > 25) {
+        explosion.frame = 0;
+    } 
+    else if (player.explodingTimer > 20) {
+        explosion.frame = 1;
+    } 
+    else if (player.explodingTimer > 15) {
+        explosion.frame = 2;
+    } 
+    else if (player.explodingTimer > 10) {
+        explosion.frame = 3;
+    }
+    else {
+        explosion.frame = 2;
+    }
+}
+
+void runGameMatch(SDL_Renderer* renderer, SDL_Event& event, TTF_Font* fontArmaliteRifle32,
                   Player& player1, Player& player2, SDL_Texture* projectileTexture,
                   SDL_Texture* explosionTexture, SDL_Texture* backgroundTexture,
-                  SceneSelection& selectedScene, int& winnerIdNumber, bool& quitApp) {
+                  SceneSelection& selectedScene, int& winnerIdNumber, bool& quitApp, SDL_Color blackColor,
+                  Explosion& explosion1, Explosion& explosion2) {
     std::vector<Projectile> projectiles{};
     size_t projectiles_counter = 0;
 
@@ -639,8 +680,14 @@ void runGameMatch(SDL_Renderer* renderer, SDL_Event& event, TTF_Font* fontArmali
     SDL_Rect scorePlayer1Position;
     SDL_Rect scorePlayer2Position;
 
-    scorePlayer1Position.x = 212, scorePlayer1Position.y = 435;
-    scorePlayer2Position.x = 550, scorePlayer2Position.y = 435;
+    const int PLAYER_ONE_TEXT_X = 20;
+    const int PLAYER_ONE_TEXT_Y = 430;
+
+    const int PLAYER_TWO_TEXT_X = 340;
+    const int PLAYER_TWO_TEXT_Y = 430;
+
+    scorePlayer1Position.x = 280, scorePlayer1Position.y = 430;
+    scorePlayer2Position.x = 600, scorePlayer2Position.y = 430;
 
     player1.position.x = 15, player1.position.y = 170, player1.position.w = 32,
     player1.position.h = 32;
@@ -808,14 +855,19 @@ void runGameMatch(SDL_Renderer* renderer, SDL_Event& event, TTF_Font* fontArmali
                    renderer);
 
         if (player1.explodingState == PlayerStateEnum::EXPLODING) {
-            SDL_RenderCopy(renderer, explosionTexture, NULL, &player1.position);
+            setExplosionFrame (player1, explosion1);
+            drawExplosion(explosion1.frame, player1.position, explosion1.spriteTexture,
+                explosion1.spriteSet, renderer);
+            // SDL_RenderCopy(renderer, explosionTexture, NULL, &player1.position);
         }
 
         drawPlayer(player2.direction, player2.position, player2.spriteTexture, player2.spriteSet,
                    renderer);
 
         if (player2.explodingState == PlayerStateEnum::EXPLODING) {
-            SDL_RenderCopy(renderer, explosionTexture, NULL, &player2.position);
+            setExplosionFrame (player2, explosion2);
+            drawExplosion(explosion2.frame, player2.position, explosion2.spriteTexture,
+                explosion2.spriteSet, renderer);
         }
 
         for (auto projectile = projectiles.begin(); projectile != projectiles.end(); ++projectile) {
@@ -823,10 +875,13 @@ void runGameMatch(SDL_Renderer* renderer, SDL_Event& event, TTF_Font* fontArmali
             SDL_RenderCopy(renderer, projectileTexture, NULL, &blitPosition);
         }
 
-        renderInteger(renderer, fontArmaliteRifle24, scorePlayer2, scorePlayer2Position.x,
-                      scorePlayer2Position.y);
-        renderInteger(renderer, fontArmaliteRifle24, scorePlayer1, scorePlayer1Position.x,
-                      scorePlayer1Position.y);
+        renderText(renderer, fontArmaliteRifle32, "Player 1", PLAYER_ONE_TEXT_X, PLAYER_ONE_TEXT_Y, blackColor);
+        renderInteger(renderer, fontArmaliteRifle32, scorePlayer1, scorePlayer1Position.x,
+                      scorePlayer1Position.y, blackColor);
+
+        renderText(renderer, fontArmaliteRifle32, "Player 2", PLAYER_TWO_TEXT_X, PLAYER_TWO_TEXT_Y, blackColor);
+        renderInteger(renderer, fontArmaliteRifle32, scorePlayer2, scorePlayer2Position.x,
+                      scorePlayer2Position.y, blackColor);
 
         SDL_RenderPresent(renderer);
 
@@ -841,7 +896,7 @@ void runGameMatch(SDL_Renderer* renderer, SDL_Event& event, TTF_Font* fontArmali
         // condi��es para verificar a vitoria dos jogadores
         if (scorePlayer1 >= 6)  // verificar vitoria do jogador 1
         {
-            winnerIdNumber = 2;
+            winnerIdNumber = 1;
             selectedScene = SceneSelection::WINNER_SCREEN;
             quitScene = true;
         }
@@ -920,6 +975,9 @@ int main(int argc, char* args[]) {
     Player player1{"Player1"};
     Player player2{"Player2"};
 
+    Explosion explosion1{"Player1"};
+    Explosion explosion2{"Player2"};
+
     SDL_Event event;  // variavel para determina��o de eventos
 
     int winnerIdNumber;
@@ -933,6 +991,8 @@ int main(int argc, char* args[]) {
 
     player1.loadSprite("resources/jogador1.bmp", renderer);
     player2.loadSprite("resources/jogador2.bmp", renderer);
+    explosion1.loadSprite("resources/explosao.bmp", renderer);
+    explosion2.loadSprite("resources/explosao.bmp", renderer);
     SDL_Texture* projectileTexture =
         createTextureFromBMPWithGreenBG(renderer, "resources/bala.bmp");
     SDL_Texture* explosionTexture =
@@ -945,6 +1005,16 @@ int main(int argc, char* args[]) {
     // Load a font
     const std::string fontFileName = "resources/armalite_rifle.ttf";
     TTF_Font* fontArmaliteRifle24 = TTF_OpenFont(fontFileName.c_str(), 24);
+    if (!fontArmaliteRifle24) {
+        std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        TTF_Quit();
+        SDL_Quit();
+        return 1;
+    }
+
+    TTF_Font* fontArmaliteRifle32 = TTF_OpenFont(fontFileName.c_str(), 32);
     if (!fontArmaliteRifle24) {
         std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
         SDL_DestroyRenderer(renderer);
@@ -1022,9 +1092,9 @@ int main(int argc, char* args[]) {
                         blackColor);
         } else if (selectedScene == SceneSelection::GAME_MATCH)  // condicao 2 (o jogo em si)
         {
-            runGameMatch(renderer, event, fontArmaliteRifle24, player1, player2, projectileTexture,
+            runGameMatch(renderer, event, fontArmaliteRifle32, player1, player2, projectileTexture,
                          explosionTexture, backgroundTexture, selectedScene, winnerIdNumber,
-                         quitApp);
+                         quitApp, blackColor, explosion1, explosion2);
         } else if (selectedScene == SceneSelection::WINNER_SCREEN) {
             runWinnerScene(renderer, event, winnerScreenTexture, selectedScene, winnerIdNumber,
                            quitApp, fontArmaliteRifle24, blackColor);
