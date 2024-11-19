@@ -13,9 +13,10 @@ enum struct PlayerStateEnum { IDLE = 0, MOVING = 1, FIRING = 2, STABLE = 3, EXPL
 enum struct SceneSelection {
     TITLE_SCREEN = 0,
     MAIN_MENU = 1,
-    GAME_MATCH = 2,
-    WINNER_SCREEN = 3,
-    UNKNOWN = 4
+    SHOW_CONTROLS = 2,
+    GAME_MATCH = 3,
+    WINNER_SCREEN = 4,
+    UNKNOWN = 5
 };
 
 // Function to convert Jogador2Direction to string

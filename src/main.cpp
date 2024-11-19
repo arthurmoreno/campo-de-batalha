@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <vector>
 
@@ -131,65 +132,84 @@ void runMainMenu(SDL_Renderer* renderer, SDL_Event& event, bool& quitApp,
                  SDL_Texture* projectileTexture, TTF_Font* fontArmaliteRifle24,
                  TTF_Font* fontArmaliteRifle50, SDL_Color whiteColor, SDL_Color blackColor) {
     const int GAME_MATCH_OPTION_X = 200;
-    const int GAME_MATCH_OPTION_Y = 270;
+    const int GAME_MATCH_OPTION_Y = 245;
+
+    const int SHOW_CONTROLS_OPTION_X = 200;
+    const int SHOW_CONTROLS_OPTION_Y = 275;
 
     const int TITLE_SCREEN_OPTION_X = 200;
-    const int TITLE_SCREEN_OPTION_Y = 300;
+    const int TITLE_SCREEN_OPTION_Y = 305;
 
     const int BULLET_OFFSET_X = 25;
     const int BULLET_OFFSET_Y = 7;
 
+    const int BULLET_OPTION_X = GAME_MATCH_OPTION_X - BULLET_OFFSET_X;
+
+    const int BULLET_GAME_MATCH_OPTION_Y = GAME_MATCH_OPTION_Y + BULLET_OFFSET_Y;
+    const int BULLET_SHOW_CONTROLS_OPTION_Y = SHOW_CONTROLS_OPTION_Y + BULLET_OFFSET_Y;
+    const int BULLET_TITLE_SCREEN_OPTION_Y = TITLE_SCREEN_OPTION_Y + BULLET_OFFSET_Y;
+
     Uint32 pressEnterCounter = 0;
     bool quitScene = false;
-    enum struct Options { GAME_MATCH = 0, TITLE_SCREEN = 1, UNKNOWN = 2 };
+    enum struct Options { GAME_MATCH = 0, SHOW_CONTROLS = 1, TITLE_SCREEN = 2, UNKNOWN = 3 };
 
-    Options selectedOption = Options::GAME_MATCH;
+    std::map<Options, int> optionToPosition = {
+        {Options::GAME_MATCH, BULLET_GAME_MATCH_OPTION_Y},
+        {Options::SHOW_CONTROLS, BULLET_SHOW_CONTROLS_OPTION_Y},
+        {Options::TITLE_SCREEN, BULLET_TITLE_SCREEN_OPTION_Y}};
+
+    std::map<Options, SceneSelection> optionsToScene = {
+        {Options::GAME_MATCH, SceneSelection::GAME_MATCH},
+        {Options::SHOW_CONTROLS, SceneSelection::SHOW_CONTROLS},
+        {Options::TITLE_SCREEN, SceneSelection::TITLE_SCREEN}};
+
+    Options optionsArray[] = {Options::GAME_MATCH, Options::SHOW_CONTROLS, Options::TITLE_SCREEN};
+    size_t maxOptionsIndex = sizeof(optionsArray) / sizeof(Options);
+    size_t selectedOptionIndex = 0;
+    Options selectedOption{};
+
     SDL_Rect blitPosition;
-    blitPosition.x = GAME_MATCH_OPTION_X - BULLET_OFFSET_X;
-    blitPosition.y = GAME_MATCH_OPTION_Y + BULLET_OFFSET_Y;
+    blitPosition.x = BULLET_OPTION_X;
+    blitPosition.y = BULLET_GAME_MATCH_OPTION_Y;
     blitPosition.w = 12;
     blitPosition.h = 12;
-    while (!quitScene)  // loop para controlar o fim do jogo
-    {
+    while (!quitScene) {
         Uint32 frameStart = SDL_GetTicks();
 
-        while (SDL_PollEvent(&event))  // menu do jogo.
-        {
-            if (event.type == SDL_KEYDOWN)  // evento do tipo tecla pressionada
-            {
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_KEYDOWN) {
                 switch (event.key.keysym.sym) {
                     case SDLK_UP:
-                        if (selectedOption == Options::GAME_MATCH) {
-                            selectedOption = Options::TITLE_SCREEN;
-                            blitPosition.y = TITLE_SCREEN_OPTION_Y + BULLET_OFFSET_Y;
+                        if (selectedOptionIndex == 0) {
+                            selectedOptionIndex = maxOptionsIndex - 1;
                         } else {
-                            selectedOption = Options::GAME_MATCH;
-                            blitPosition.y = GAME_MATCH_OPTION_Y + BULLET_OFFSET_Y;
+                            selectedOptionIndex--;
                         }
+
+                        selectedOption = optionsArray[selectedOptionIndex];
+                        blitPosition.y = optionToPosition[selectedOption];
                         break;
                     case SDLK_DOWN:
-                        if (selectedOption == Options::GAME_MATCH) {
-                            selectedOption = Options::TITLE_SCREEN;
-                            blitPosition.y = TITLE_SCREEN_OPTION_Y + BULLET_OFFSET_Y;
+
+                        if (selectedOptionIndex == maxOptionsIndex - 1) {
+                            selectedOptionIndex = 0;
                         } else {
-                            selectedOption = Options::GAME_MATCH;
-                            blitPosition.y = GAME_MATCH_OPTION_Y + BULLET_OFFSET_Y;
+                            selectedOptionIndex++;
                         }
+
+                        selectedOption = optionsArray[selectedOptionIndex];
+                        blitPosition.y = optionToPosition[selectedOption];
                         break;
                     case SDLK_RETURN:
                         quitScene = true;
-                        if (selectedOption == Options::GAME_MATCH) {
-                            selectedScene = SceneSelection::GAME_MATCH;
-                        } else {
-                            selectedScene = SceneSelection::TITLE_SCREEN;
-                        }
+                        selectedOption = optionsArray[selectedOptionIndex];
+                        selectedScene = optionsToScene[selectedOption];
                         break;
                     default:
                         break;
                 }
             }
-            if (event.type == SDL_QUIT)  // fechar o programa caso cliquem no X
-            {
+            if (event.type == SDL_QUIT) {
                 quitScene = true;
                 quitApp = true;
             }
@@ -199,10 +219,14 @@ void runMainMenu(SDL_Renderer* renderer, SDL_Event& event, bool& quitApp,
         SDL_RenderCopy(renderer, titleScreenTexture, NULL, NULL);
 
         renderText(renderer, fontArmaliteRifle50, "Campo de Batalha", 80, 60, blackColor);
+
         renderText(renderer, fontArmaliteRifle24, "Start Match", GAME_MATCH_OPTION_X,
                    GAME_MATCH_OPTION_Y, blackColor);
+        renderText(renderer, fontArmaliteRifle24, "Show game controls", SHOW_CONTROLS_OPTION_X,
+                   SHOW_CONTROLS_OPTION_Y, blackColor);
         renderText(renderer, fontArmaliteRifle24, "Back to title Screen", TITLE_SCREEN_OPTION_X,
                    TITLE_SCREEN_OPTION_Y, blackColor);
+
         if (pressEnterCounter >= 0 && pressEnterCounter < 50) {
             SDL_RenderCopy(renderer, projectileTexture, NULL, &blitPosition);
         }
@@ -216,6 +240,62 @@ void runMainMenu(SDL_Renderer* renderer, SDL_Event& event, bool& quitApp,
         // Delay to maintain the desired frame rate, if necessary
         if (frameTime < FRAME_DELAY) {
             SDL_Delay(FRAME_DELAY - frameTime);
+        }
+    }
+}
+
+void runShowControlsScene(SDL_Renderer* renderer, SDL_Event& event,
+                          SDL_Texture* showControlsTexture, SceneSelection& selectedScene,
+                          int& winnerIdNumber, bool& quitApp, TTF_Font* fontArmaliteRifle18,
+                          TTF_Font* fontArmaliteRifle24, SDL_Color blackColor) {
+    Uint32 pressEnterCounter = 0;
+
+    bool quitScene = false;
+    bool firstFrame = true;
+    while (!quitScene) {
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_KEYDOWN && !firstFrame) {
+                quitScene = true;
+                selectedScene = SceneSelection::MAIN_MENU;
+            }
+            if (event.type == SDL_QUIT) {
+                quitScene = true;
+                quitApp = true;
+            }
+        }
+
+        SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, showControlsTexture, NULL, NULL);
+
+        renderText(renderer, fontArmaliteRifle24, "Player 1 controls:", 80, 40, blackColor);
+
+        renderText(renderer, fontArmaliteRifle18, "Arrow UP -> Move Up", 100, 70, blackColor);
+        renderText(renderer, fontArmaliteRifle18, "Arrow LEFT -> Move Left", 100, 95, blackColor);
+        renderText(renderer, fontArmaliteRifle18, "Arrow DOWN -> Move Down", 100, 120, blackColor);
+        renderText(renderer, fontArmaliteRifle18, "Arrow RIGHT -> Move Right", 100, 145,
+                   blackColor);
+        renderText(renderer, fontArmaliteRifle18, "M -> Fire Bullet", 100, 170, blackColor);
+
+        renderText(renderer, fontArmaliteRifle24, "Player 2 controls:", 80, 200, blackColor);
+
+        renderText(renderer, fontArmaliteRifle18, "W -> Move Up", 100, 230, blackColor);
+        renderText(renderer, fontArmaliteRifle18, "A -> Move Left", 100, 255, blackColor);
+        renderText(renderer, fontArmaliteRifle18, "S -> Move Down", 100, 280, blackColor);
+        renderText(renderer, fontArmaliteRifle18, "D -> Move Right", 100, 305, blackColor);
+        renderText(renderer, fontArmaliteRifle18, "F -> Fire Bullet", 100, 330, blackColor);
+
+        if (pressEnterCounter >= 0 && pressEnterCounter < 50) {
+            renderText(renderer, fontArmaliteRifle24, "Press any key!", 240, 360, blackColor);
+        }
+        pressEnterCounter = (pressEnterCounter >= 75) ? 0 : pressEnterCounter + 1;
+
+        SDL_RenderPresent(renderer);
+
+        if (firstFrame) {
+            SDL_Delay(500);
+            firstFrame = false;
+        } else {
+            SDL_Delay(16);
         }
     }
 }
@@ -572,12 +652,23 @@ int main(int argc, char* args[]) {
     SDL_Texture* explosionTexture =
         createTextureFromBMPWithGreenBG(renderer, "resources/explosao.bmp");
     SDL_Texture* titleScreenTexture = createTextureFromBMP(renderer, "resources/telainicial.bmp");
-    SDL_Texture* menuSurfaceTexture = createTextureFromBMP(renderer, "resources/telainicial.bmp");
+    SDL_Texture* showControlsTexture =
+        createTextureFromBMP(renderer, "resources/show_controls_screen.bmp");
     SDL_Texture* backgroundTexture = createTextureFromBMP(renderer, "resources/fundo.bmp");
     SDL_Texture* winnerScreenTexture = createTextureFromBMP(renderer, "resources/telavencedor.bmp");
 
     // Load a font
     const std::string fontFileName = "resources/armalite_rifle.ttf";
+    TTF_Font* fontArmaliteRifle18 = TTF_OpenFont(fontFileName.c_str(), 18);
+    if (!fontArmaliteRifle18) {
+        std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        TTF_Quit();
+        SDL_Quit();
+        return 1;
+    }
+
     TTF_Font* fontArmaliteRifle24 = TTF_OpenFont(fontFileName.c_str(), 24);
     if (!fontArmaliteRifle24) {
         std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
@@ -589,7 +680,7 @@ int main(int argc, char* args[]) {
     }
 
     TTF_Font* fontArmaliteRifle32 = TTF_OpenFont(fontFileName.c_str(), 32);
-    if (!fontArmaliteRifle24) {
+    if (!fontArmaliteRifle32) {
         std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
@@ -599,7 +690,7 @@ int main(int argc, char* args[]) {
     }
 
     TTF_Font* fontArmaliteRifle50 = TTF_OpenFont(fontFileName.c_str(), 50);
-    if (!fontArmaliteRifle24) {
+    if (!fontArmaliteRifle50) {
         std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
@@ -664,6 +755,10 @@ int main(int argc, char* args[]) {
             runMainMenu(renderer, event, quitApp, selectedScene, titleScreenTexture,
                         projectileTexture, fontArmaliteRifle24, fontArmaliteRifle50, whiteColor,
                         blackColor);
+        } else if (selectedScene == SceneSelection::SHOW_CONTROLS) {
+            runShowControlsScene(renderer, event, showControlsTexture, selectedScene,
+                                 winnerIdNumber, quitApp, fontArmaliteRifle18, fontArmaliteRifle24,
+                                 blackColor);
         } else if (selectedScene == SceneSelection::GAME_MATCH)  // condicao 2 (o jogo em si)
         {
             runGameMatch(renderer, event, fontArmaliteRifle32, player1, player2, projectileTexture,
