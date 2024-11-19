@@ -5,7 +5,7 @@
 #include <sstream>
 #include <vector>
 
-#define SDL_MAIN_HANDLED  // Add this line
+#define SDL_MAIN_HANDLED
 
 #if defined(__APPLE__)
 #include <SDL2/SDL.h>
@@ -24,142 +24,12 @@
 #endif
 
 #include "Constants.hpp"
-#include "Player.hpp"
 #include "Explosion.hpp"
+#include "LowLevelRenderer.hpp"
+#include "Physics.hpp"
+#include "Player.hpp"
 #include "Projectile.hpp"
 #include "SpriteSet.hpp"
-
-// *****************************
-// Low level rendering functions
-// *****************************
-
-SDL_Texture* createTextureFromBMPWithGreenBG(SDL_Renderer* renderer,
-                                             const std::string& spriteFileName) {
-    SDL_Surface* tmpSurface = nullptr;
-    tmpSurface = SDL_LoadBMP(spriteFileName.c_str());
-    SDL_SetColorKey(tmpSurface, SDL_TRUE, SDL_MapRGB(tmpSurface->format, 0, 255, 0));
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, tmpSurface);
-    SDL_FreeSurface(tmpSurface);
-
-    return texture;
-}
-
-SDL_Texture* createTextureFromBMP(SDL_Renderer* renderer, const std::string& spriteFileName) {
-    SDL_Surface* tmpSurface = nullptr;
-    tmpSurface = SDL_LoadBMP(spriteFileName.c_str());
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, tmpSurface);
-    SDL_FreeSurface(tmpSurface);
-
-    return texture;
-}
-
-// funcao para carregar os tanques na tela
-void drawPlayer(int playerDirection, SDL_Rect position, SDL_Texture* playerTexture,
-                SpriteSet& playerSpriteSet, SDL_Renderer* renderer) {
-    SDL_Rect playerSpriteRect;
-    switch (playerDirection) {
-        case static_cast<int>(DirectionEnum::UP):
-            playerSpriteRect = playerSpriteSet.getRect("UP");
-            break;
-        case static_cast<int>(DirectionEnum::DOWN):
-            playerSpriteRect = playerSpriteSet.getRect("DOWN");
-            break;
-        case static_cast<int>(DirectionEnum::RIGHT):
-            playerSpriteRect = playerSpriteSet.getRect("RIGHT");
-            break;
-        case static_cast<int>(DirectionEnum::LEFT):
-            playerSpriteRect = playerSpriteSet.getRect("LEFT");
-            break;
-        default:
-            playerSpriteRect = playerSpriteSet.getRect("DOWN");
-            break;
-    }
-    SDL_RenderCopy(renderer, playerTexture, &playerSpriteRect, &position);
-}
-
-// funcao para carregar os tanques na tela
-void drawExplosion(int explosionFrame, SDL_Rect position, SDL_Texture* explosionTexture,
-                SpriteSet& explosionSpriteSet, SDL_Renderer* renderer) {
-    SDL_Rect explosionSpriteRect;
-    switch (explosionFrame) {
-        case 0:
-            explosionSpriteRect = explosionSpriteSet.getRect("FIRST");
-            break;
-        case 1:
-            explosionSpriteRect = explosionSpriteSet.getRect("SECOND");
-            break;
-        case 2:
-            explosionSpriteRect = explosionSpriteSet.getRect("THIRD");
-            break;
-        case 3:
-            explosionSpriteRect = explosionSpriteSet.getRect("FORTH");
-            break;
-        default:
-            explosionSpriteRect = explosionSpriteSet.getRect("FIRST");
-            break;
-    }
-    SDL_RenderCopy(renderer, explosionTexture, &explosionSpriteRect, &position);
-}
-
-void renderText(SDL_Renderer* renderer, TTF_Font* font, const std::string& text, int x, int y,
-                SDL_Color color) {
-    // Render text to an SDL_Surface
-    SDL_Surface* textSurface = TTF_RenderUTF8_Blended(font, text.c_str(), color);
-    if (!textSurface) {
-        SDL_Log("TTF_RenderUTF8_Blended Error: %s", TTF_GetError());
-        return;
-    }
-
-    // Convert SDL_Surface to SDL_Texture
-    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-    if (!textTexture) {
-        SDL_Log("SDL_CreateTextureFromSurface Error: %s", SDL_GetError());
-        SDL_FreeSurface(textSurface);
-        return;
-    }
-
-    // Set destination rectangle for rendering the text
-    SDL_Rect destRect = {x, y, textSurface->w, textSurface->h};
-
-    // Render the texture
-    SDL_RenderCopy(renderer, textTexture, nullptr, &destRect);
-
-    // Clean up
-    SDL_FreeSurface(textSurface);
-    SDL_DestroyTexture(textTexture);
-}
-
-// Function to render an integer as text
-void renderInteger(SDL_Renderer* renderer, TTF_Font* font, int number, int x, int y, SDL_Color color) {
-
-    // Convert integer to string
-    std::string text = std::to_string(number);
-
-    // Render text to an SDL_Surface
-    SDL_Surface* textSurface = TTF_RenderUTF8_Blended(font, text.c_str(), color);
-    if (!textSurface) {
-        SDL_Log("TTF_RenderUTF8_Blended Error: %s", TTF_GetError());
-        return;
-    }
-
-    // Convert SDL_Surface to SDL_Texture
-    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-    if (!textTexture) {
-        SDL_Log("SDL_CreateTextureFromSurface Error: %s", SDL_GetError());
-        SDL_FreeSurface(textSurface);
-        return;
-    }
-
-    // Set destination rectangle for rendering the text
-    SDL_Rect destRect = {x, y, textSurface->w, textSurface->h};
-
-    // Render the texture
-    SDL_RenderCopy(renderer, textTexture, nullptr, &destRect);
-
-    // Clean up
-    SDL_FreeSurface(textSurface);
-    SDL_DestroyTexture(textTexture);
-}
 
 // *****************************
 // Audio utils functions
@@ -199,167 +69,6 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
     // If we didn't fill the entire buffer, pad the rest with silence
     if (lenToCopy < length) {
         SDL_memset(stream + lenToCopy, 0, length - lenToCopy);
-    }
-}
-
-// *******************************
-// Collision and Physics functions
-// *******************************
-
-// Function to create a collision box based on an original SDL_Rect
-SDL_Rect createCollisionBox(const SDL_Rect& originalRect, int shrinkX, int shrinkY) {
-    SDL_Rect collisionBox;
-
-    // Adjust the position to center the collision box
-    collisionBox.x = originalRect.x + shrinkX;
-    collisionBox.y = originalRect.y + shrinkY;
-
-    // Adjust the width and height
-    collisionBox.w = originalRect.w - shrinkX * 2;
-    collisionBox.h = originalRect.h - shrinkY * 2;
-
-    // Ensure the width and height are not negative
-    if (collisionBox.w < 0) collisionBox.w = 0;
-    if (collisionBox.h < 0) collisionBox.h = 0;
-
-    return collisionBox;
-}
-
-// funcao que verifica a colisao entre objetos
-bool checkCollisionBetweenTwoRects(int ax, int ay, int aw, int ah, int cx, int cy, int cw, int ch) {
-    int bx, by, dx, dy;
-    bx = ax + aw;
-    by = ay + ah;
-    dx = cx + cw;
-    dy = cy + ch;
-    return (((ax > dx) || (bx < cx) || (ay > dy) || (by < cy)));
-}
-
-bool checkCollision(const SDL_Rect& firstPlayerPosition, const SDL_Rect& secondPlayerPosition,
-                    const SDL_Rect& wall, const SDL_Rect& menu,
-                    std::vector<Projectile>& projectiles, const bool checkProjectiles,
-                    const bool shouldErase) {
-    bool notCollidedWithProjectile = true;
-    if (checkProjectiles) {
-        for (auto projectile = projectiles.begin(); projectile != projectiles.end();) {
-            bool _notCollidedWithProjectile = checkCollisionBetweenTwoRects(
-                firstPlayerPosition.x, firstPlayerPosition.y, firstPlayerPosition.w,
-                firstPlayerPosition.h, projectile->position.x, projectile->position.y,
-                projectile->position.w, projectile->position.h);
-            notCollidedWithProjectile = (notCollidedWithProjectile && _notCollidedWithProjectile);
-
-            if (!_notCollidedWithProjectile && shouldErase) {
-                // Collision detected, remove projectile
-                projectile = projectiles.erase(projectile);  // Erase returns the next iterator
-            } else {
-                ++projectile;  // Move to the next element
-            }
-        }
-    }
-
-    return (checkCollisionBetweenTwoRects(firstPlayerPosition.x, firstPlayerPosition.y,
-                                          firstPlayerPosition.w, firstPlayerPosition.h, wall.x,
-                                          wall.y, wall.w, wall.h) &&
-            checkCollisionBetweenTwoRects(firstPlayerPosition.x, firstPlayerPosition.y,
-                                          firstPlayerPosition.w, firstPlayerPosition.h,
-                                          secondPlayerPosition.x, secondPlayerPosition.y,
-                                          secondPlayerPosition.w, secondPlayerPosition.h) &&
-            checkCollisionBetweenTwoRects(firstPlayerPosition.x, firstPlayerPosition.y,
-                                          firstPlayerPosition.w, firstPlayerPosition.h, menu.x,
-                                          menu.y, menu.w, menu.h) &&
-            notCollidedWithProjectile);
-}
-
-void fireProjectile(Player& player, std::vector<Projectile>& projectiles,
-                    size_t& projectiles_counter) {
-    if (player.firingState == PlayerStateEnum::IDLE) {
-        Projectile projectile = Projectile(projectiles_counter);
-
-        switch (player.direction) {
-            case static_cast<int>(DirectionEnum::UP): {
-                projectile.position.x = player.position.x + 12;
-                projectile.position.y = player.position.y - 20;
-                projectile.position.w = 12;
-                projectile.position.h = 12;
-                projectile.setDirection(DirectionEnum::UP);
-
-                player.firingState = PlayerStateEnum::FIRING;
-                player.firingCooldown = PLAYER_FIRING_TIMER;
-            } break;
-            case static_cast<int>(DirectionEnum::DOWN): {
-                projectile.position.x = player.position.x + 12;
-                projectile.position.y = player.position.y + 40;
-                projectile.position.w = 12;
-                projectile.position.h = 12;
-                projectile.setDirection(DirectionEnum::DOWN);
-
-                player.firingState = PlayerStateEnum::FIRING;
-                player.firingCooldown = PLAYER_FIRING_TIMER;
-            } break;
-            case static_cast<int>(DirectionEnum::RIGHT): {
-                projectile.position.x = player.position.x + 40;
-                projectile.position.y = player.position.y + 12;
-                projectile.position.w = 12;
-                projectile.position.h = 12;
-                projectile.setDirection(DirectionEnum::RIGHT);
-
-                player.firingState = PlayerStateEnum::FIRING;
-                player.firingCooldown = PLAYER_FIRING_TIMER;
-            } break;
-            case static_cast<int>(DirectionEnum::LEFT): {
-                projectile.position.x = player.position.x - 20;
-                projectile.position.y = player.position.y + 12;
-                projectile.position.w = 12;
-                projectile.position.h = 12;
-                projectile.setDirection(DirectionEnum::LEFT);
-
-                player.firingState = PlayerStateEnum::FIRING;
-                player.firingCooldown = PLAYER_FIRING_TIMER;
-            } break;
-
-            default:
-                break;
-        }
-
-        projectile.movingCooldown = PROJECTILE_MOVING_COOLDOWN;
-        projectiles.push_back(projectile);
-        projectiles_counter++;
-    }
-}
-
-void processProjectilesPhysics(std::vector<Projectile>& projectiles) {
-    for (auto projectile = projectiles.begin(); projectile != projectiles.end();) {
-        if (projectile->movingCooldown > 0) {
-            projectile->movingCooldown--;
-        } else {
-            switch (projectile->direction) {
-                case static_cast<int>(DirectionEnum::UP): {
-                    projectile->position.y = projectile->position.y - PROJECTILE_MOVING_UNITS;
-                    projectile->movingCooldown = PROJECTILE_MOVING_COOLDOWN;
-                } break;
-                case static_cast<int>(DirectionEnum::DOWN): {
-                    projectile->position.y = projectile->position.y + PROJECTILE_MOVING_UNITS;
-                    projectile->movingCooldown = PROJECTILE_MOVING_COOLDOWN;
-                } break;
-                case static_cast<int>(DirectionEnum::RIGHT): {
-                    projectile->position.x = projectile->position.x + PROJECTILE_MOVING_UNITS;
-                    projectile->movingCooldown = PROJECTILE_MOVING_COOLDOWN;
-                } break;
-                case static_cast<int>(DirectionEnum::LEFT): {
-                    projectile->position.x = projectile->position.x - PROJECTILE_MOVING_UNITS;
-                    projectile->movingCooldown = PROJECTILE_MOVING_COOLDOWN;
-                } break;
-
-                default:
-                    break;
-            }
-        }
-        if (projectile->position.x < -10 || projectile->position.x > 1000 ||
-            projectile->position.y < -10 || projectile->position.y > 1000) {
-            projectile = projectiles.erase(projectile);  // erase returns the next valid iterator
-        } else {
-            ++projectile;  // Only increment if no deletion occurred
-        }
     }
 }
 
@@ -647,17 +356,13 @@ void runMainMenu(SDL_Renderer* renderer, SDL_Event& event, bool& quitApp,
 void setExplosionFrame(Player& player, Explosion& explosion) {
     if (player.explodingTimer > 25) {
         explosion.frame = 0;
-    } 
-    else if (player.explodingTimer > 20) {
+    } else if (player.explodingTimer > 20) {
         explosion.frame = 1;
-    } 
-    else if (player.explodingTimer > 15) {
+    } else if (player.explodingTimer > 15) {
         explosion.frame = 2;
-    } 
-    else if (player.explodingTimer > 10) {
+    } else if (player.explodingTimer > 10) {
         explosion.frame = 3;
-    }
-    else {
+    } else {
         explosion.frame = 2;
     }
 }
@@ -665,8 +370,8 @@ void setExplosionFrame(Player& player, Explosion& explosion) {
 void runGameMatch(SDL_Renderer* renderer, SDL_Event& event, TTF_Font* fontArmaliteRifle32,
                   Player& player1, Player& player2, SDL_Texture* projectileTexture,
                   SDL_Texture* explosionTexture, SDL_Texture* backgroundTexture,
-                  SceneSelection& selectedScene, int& winnerIdNumber, bool& quitApp, SDL_Color blackColor,
-                  Explosion& explosion1, Explosion& explosion2) {
+                  SceneSelection& selectedScene, int& winnerIdNumber, bool& quitApp,
+                  SDL_Color blackColor, Explosion& explosion1, Explosion& explosion2) {
     std::vector<Projectile> projectiles{};
     size_t projectiles_counter = 0;
 
@@ -855,9 +560,9 @@ void runGameMatch(SDL_Renderer* renderer, SDL_Event& event, TTF_Font* fontArmali
                    renderer);
 
         if (player1.explodingState == PlayerStateEnum::EXPLODING) {
-            setExplosionFrame (player1, explosion1);
+            setExplosionFrame(player1, explosion1);
             drawExplosion(explosion1.frame, player1.position, explosion1.spriteTexture,
-                explosion1.spriteSet, renderer);
+                          explosion1.spriteSet, renderer);
             // SDL_RenderCopy(renderer, explosionTexture, NULL, &player1.position);
         }
 
@@ -865,9 +570,9 @@ void runGameMatch(SDL_Renderer* renderer, SDL_Event& event, TTF_Font* fontArmali
                    renderer);
 
         if (player2.explodingState == PlayerStateEnum::EXPLODING) {
-            setExplosionFrame (player2, explosion2);
+            setExplosionFrame(player2, explosion2);
             drawExplosion(explosion2.frame, player2.position, explosion2.spriteTexture,
-                explosion2.spriteSet, renderer);
+                          explosion2.spriteSet, renderer);
         }
 
         for (auto projectile = projectiles.begin(); projectile != projectiles.end(); ++projectile) {
@@ -875,11 +580,13 @@ void runGameMatch(SDL_Renderer* renderer, SDL_Event& event, TTF_Font* fontArmali
             SDL_RenderCopy(renderer, projectileTexture, NULL, &blitPosition);
         }
 
-        renderText(renderer, fontArmaliteRifle32, "Player 1", PLAYER_ONE_TEXT_X, PLAYER_ONE_TEXT_Y, blackColor);
+        renderText(renderer, fontArmaliteRifle32, "Player 1", PLAYER_ONE_TEXT_X, PLAYER_ONE_TEXT_Y,
+                   blackColor);
         renderInteger(renderer, fontArmaliteRifle32, scorePlayer1, scorePlayer1Position.x,
                       scorePlayer1Position.y, blackColor);
 
-        renderText(renderer, fontArmaliteRifle32, "Player 2", PLAYER_TWO_TEXT_X, PLAYER_TWO_TEXT_Y, blackColor);
+        renderText(renderer, fontArmaliteRifle32, "Player 2", PLAYER_TWO_TEXT_X, PLAYER_TWO_TEXT_Y,
+                   blackColor);
         renderInteger(renderer, fontArmaliteRifle32, scorePlayer2, scorePlayer2Position.x,
                       scorePlayer2Position.y, blackColor);
 
