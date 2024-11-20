@@ -42,6 +42,15 @@ build-linux:
 	@cd $(BUILD_DIR) && $(CMAKE) $(CMAKE_GENERATOR_LINUX) .. && $(MAKE_CMD)
 	@mv $(BUILD_DIR)/$(PROJECT) .
 
+build-linux-release:
+	@echo "Starting release build process on Linux..."
+	@mkdir -p $(BUILD_DIR)
+	@cd $(BUILD_DIR) && $(CMAKE) $(CMAKE_GENERATOR_LINUX) .. && $(MAKE_CMD)
+	@rm -rf release
+	@mkdir release
+	@cp $(BUILD_DIR)/$(PROJECT) release/
+	@cp -r resources release/
+
 # Clean target
 clean:
 	@echo "Cleaning project..."
