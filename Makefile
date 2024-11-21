@@ -23,7 +23,7 @@ MAKE_CMD := make
 # Vcpkg variables
 VCPKG_ROOT := C:/Users/Arthur/vcpkg
 VCPKG_TOOLCHAIN := $(VCPKG_ROOT)/scripts/buildsystems/vcpkg.cmake
-VCPKG_TRIPLET := x64-windows
+VCPKG_TRIPLET := x64-mingw-static
 VCPKG := $(VCPKG_ROOT)/vcpkg.exe
 
 # ==============================
@@ -42,7 +42,7 @@ vcpkg-install:
 
 # Build target for Windows
 build-win: vcpkg-install
-	@echo "Starting build process on Windows..."
+	@echo "Starting build process on Windows with MinGW..."
 	@if not exist "$(BUILD_DIR)" mkdir "$(BUILD_DIR)"
 	@cd "$(BUILD_DIR)" && \
 	$(CMAKE) -G $(CMAKE_GENERATOR_WIN) \
@@ -50,12 +50,15 @@ build-win: vcpkg-install
 		-DVCPKG_TARGET_TRIPLET=$(VCPKG_TRIPLET) \
 		-DCMAKE_BUILD_TYPE=Release \
 		.. && \
-	$(MAKE_CMD) --always-make
-	@echo "Copying DLLs to the project root directory..."
-	@for %%f in ($(DLLS)) do (
-		copy "$(VCPKG_ROOT)/installed/$(VCPKG_TRIPLET)/bin/%%f" "."
-	)
-	@echo "Build and copy completed successfully."
+	$(MAKE_CMD) --always-make && \
+	$(CMAKE) --install . --config Release
+	@echo "Build and installation completed successfully."
+
+# Clean build files
+clean-win:
+	@echo "Cleaning build files..."
+	@if exist "$(BUILD_DIR)" rd /s /q "$(BUILD_DIR)"
+	@echo "Cleaning completed."
 
 # Vcpkg package installation
 
@@ -76,7 +79,7 @@ build-linux-release:
 	@cp -r resources release/
 
 # Clean target
-clean:
+clean-linux:
 	@echo "Cleaning project..."
 	@$(RM) -r $(BUILD_DIR)
 	@$(RM) $(PROJECT) $(PROJECT).exe

@@ -6,8 +6,6 @@
 #include <sstream>
 #include <vector>
 
-#define SDL_MAIN_HANDLED
-
 #if defined(__APPLE__)
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>

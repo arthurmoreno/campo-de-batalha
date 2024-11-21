@@ -20,8 +20,15 @@ Install Gcc, Cmake, SDL2, SDL2 TTF and SDL2 Image on your target OS.
 
 Compiling with CMake:
 ```
-make clean
+make clean-win
 make build-win
+```
+
+Copy necessary dlls
+```
+copy "C:/msys64/ucrt64/bin/libwinpthread-1.dll" "./build"
+copy "C:/msys64/ucrt64/bin/libstdc++-6.dll" "./build"
+copy "C:/msys64/ucrt64/bin/libgcc_s_seh-1.dll" "./build"
 ```
 
 If you need to compile with gcc:
