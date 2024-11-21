@@ -18,3 +18,6 @@ Thumbs.db
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
+
+# vcpkg
+vcpkg_installed/*

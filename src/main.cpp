@@ -13,7 +13,7 @@
 #include <SDL2/SDL_ttf.h>
 #elif defined(_WIN32) || defined(_WIN64)
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
+#include <SDL_ttf.h>
 #include <windows.h>
 #include <winsock2.h>
 #elif defined(__linux__)

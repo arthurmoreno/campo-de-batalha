@@ -20,6 +20,12 @@ CMAKE := cmake
 # Make executable
 MAKE_CMD := make
 
+# Vcpkg variables
+VCPKG_ROOT := C:/Users/Arthur/vcpkg
+VCPKG_TOOLCHAIN := $(VCPKG_ROOT)/scripts/buildsystems/vcpkg.cmake
+VCPKG_TRIPLET := x64-windows
+VCPKG := $(VCPKG_ROOT)/vcpkg.exe
+
 # ==============================
 #           RULES
 # ==============================
@@ -29,11 +35,29 @@ MAKE_CMD := make
 # Default target
 all: build
 
+.PHONY: vcpkg-install
+vcpkg-install:
+	@echo "Installing vcpkg dependencies..."
+	@$(VCPKG) install $(VCPKG_PACKAGES) --triplet $(VCPKG_TRIPLET)
+
 # Build target for Windows
-build-win:
+build-win: vcpkg-install
 	@echo "Starting build process on Windows..."
-	@if not exist $(BUILD_DIR) mkdir $(BUILD_DIR)
-	@cd $(BUILD_DIR) && $(CMAKE) -G $(CMAKE_GENERATOR_WIN) .. && $(MAKE_CMD) --always-make
+	@if not exist "$(BUILD_DIR)" mkdir "$(BUILD_DIR)"
+	@cd "$(BUILD_DIR)" && \
+	$(CMAKE) -G $(CMAKE_GENERATOR_WIN) \
+		-DCMAKE_TOOLCHAIN_FILE=$(VCPKG_TOOLCHAIN) \
+		-DVCPKG_TARGET_TRIPLET=$(VCPKG_TRIPLET) \
+		-DCMAKE_BUILD_TYPE=Release \
+		.. && \
+	$(MAKE_CMD) --always-make
+	@echo "Copying DLLs to the project root directory..."
+	@for %%f in ($(DLLS)) do (
+		copy "$(VCPKG_ROOT)/installed/$(VCPKG_TRIPLET)/bin/%%f" "."
+	)
+	@echo "Build and copy completed successfully."
+
+# Vcpkg package installation
 
 # Build target for Linux
 build-linux:
